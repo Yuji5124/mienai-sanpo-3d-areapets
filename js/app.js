@@ -558,11 +558,17 @@ document.addEventListener('DOMContentLoaded', () => {
     status.textContent = '取得中...';
 
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        const lat    = pos.coords.latitude;
-        const lng    = pos.coords.longitude;
+      gpsPos => {
+        const lat    = gpsPos.coords.latitude;
+        const lng    = gpsPos.coords.longitude;
         const fld    = gpsToField(lat, lng);
         const inside = isInsidePark(lat, lng);
+
+        // フィールド座標に現在地を反映してピンを移動
+        pos.x = fld.x;
+        pos.y = fld.y;
+        renderPin();
+        savePos();
 
         const welcomeLine = inside
           ? '<span class="gps-welcome">ようこそ木場公園へ</span>'
