@@ -551,6 +551,24 @@ html, body {
   55%      { box-shadow: 0 0 0 11px rgba(130, 200, 255, 0); }
 }
 
+/* 風のしるし — 黄緑系で水の記憶と区別 */
+.motif.motif-wind {
+  background: radial-gradient(circle,
+    rgba(180, 230, 150, 0.85) 0%,
+    rgba(150, 210, 120, 0.2)  50%,
+    transparent               100%
+  );
+}
+
+.motif.motif-wind.near {
+  animation: motif-wind-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes motif-wind-pulse {
+  0%, 100% { box-shadow: 0 0 0 0    rgba(180, 230, 150, 0.55); }
+  55%      { box-shadow: 0 0 0 11px rgba(180, 230, 150, 0); }
+}
+
 /* ===========================
    発見トースト
    =========================== */
@@ -631,6 +649,16 @@ html, body {
   border: 1.5px solid rgba(130, 200, 255, 0.28);
 }
 
+/* 風のしるし — アイコンドット色変え */
+.record-icon-dot.wind {
+  background: radial-gradient(circle,
+    rgba(180, 230, 150, 0.55) 0%,
+    rgba(150, 210, 120, 0.12) 60%,
+    transparent               100%
+  );
+  border: 1.5px solid rgba(180, 230, 150, 0.32);
+}
+
 .record-body {
   flex: 1;
   min-width: 0;
@@ -658,4 +686,140 @@ html, body {
 @keyframes record-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===========================
+   AIDA 拠点カード
+   =========================== */
+.base-card {
+  display: none;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 24px 20px 20px;
+  box-shadow: var(--shadow-sm);
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: record-in 0.55s ease-out both;
+}
+
+.base-card.active {
+  display: flex;
+}
+
+.base-visual {
+  position: relative;
+  width: 90px;
+  height: 70px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.base-light {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(77, 184, 175, 0.6)  0%,
+    rgba(77, 184, 175, 0.15) 55%,
+    transparent              100%
+  );
+  animation: kyoten-glow 3s ease-in-out infinite;
+}
+
+.base-floor {
+  width: 72px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,
+    rgba(77, 184, 175, 0.22) 0%,
+    transparent              75%
+  );
+  flex-shrink: 0;
+}
+
+@keyframes kyoten-glow {
+  0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1);    }
+  50%      { opacity: 1;    transform: translateX(-50%) scale(1.12); }
+}
+
+.base-info {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.base-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.base-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.base-lv {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--teal-dark);
+  background: rgba(77, 184, 175, 0.1);
+  border: 1px solid rgba(77, 184, 175, 0.28);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.base-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ===========================
+   次の目標カード
+   =========================== */
+.goal-card {
+  display: none;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+  flex-direction: column;
+  gap: 10px;
+}
+
+.goal-card.active {
+  display: flex;
+}
+
+.goal-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+
+.goal-bar-track {
+  height: 3px;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.goal-bar-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.6s ease;
 }

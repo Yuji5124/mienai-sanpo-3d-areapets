@@ -8,6 +8,7 @@
 // ===========================
 const STORAGE_POINTS  = 'areapets_points';
 const STORAGE_MOTIF   = 'areapets_motif';
+const STORAGE_MOTIF2  = 'areapets_motif2';
 const STORAGE_RECORDS = 'areapets_records';
 const STORAGE_CELLS   = 'areapets_cells';
 const STORAGE_POS     = 'areapets_pos';
@@ -130,8 +131,9 @@ function movePin(dx, dy) {
   savePos();
   if (memResult === 'new')     addPoints(2);
   if (memResult === 'levelup') addPoints(1);
-  flashBadge('移動中...');  // checkMotif が近傍なら上書きする
+  flashBadge('移動中...');  // checkMotif* が近傍なら上書きする
   checkMotif();
+  checkMotif2();
 }
 
 // ===========================
@@ -194,12 +196,18 @@ function stampMemory(x, y) {
 // ===========================
 // 隠れモチーフ（水の記憶）
 // ===========================
-const MOTIF_POS         = { x: 70, y: 30 };  // マップ右上エリア
-const MOTIF_NEAR_RADIUS = 16;   // この距離で目覚める
-const MOTIF_TOUCH_RADIUS = 6.5; // この距離で発見
+const MOTIF_POS          = { x: 70, y: 30 };  // マップ右上エリア
+const MOTIF_NEAR_RADIUS  = 16;
+const MOTIF_TOUCH_RADIUS = 6.5;
+
+const MOTIF2_POS          = { x: 25, y: 75 };  // マップ左下エリア
+const MOTIF2_NEAR_RADIUS  = 16;
+const MOTIF2_TOUCH_RADIUS = 6.5;
 
 let motifEl       = null;
 let motifState    = 'hidden';  // 'hidden' | 'near' | 'found'
+let motif2El      = null;
+let motif2State   = 'hidden';
 let kirokuRecords = [];         // 保存・復元に使う記録の配列
 
 function initMotif() {
@@ -256,6 +264,54 @@ function discoverMotif() {
   saveState();
 }
 
+// ===========================
+// 隠れモチーフ2（風のしるし）
+// ===========================
+function initMotif2() {
+  const map  = document.getElementById('map-area');
+  if (!map) return;
+  const grid = map.querySelector('.grid-overlay');
+
+  motif2El = document.createElement('div');
+  motif2El.className  = 'motif motif-wind';
+  motif2El.style.left = MOTIF2_POS.x + '%';
+  motif2El.style.top  = MOTIF2_POS.y + '%';
+  map.insertBefore(motif2El, grid);
+}
+
+function checkMotif2() {
+  if (motif2State === 'found') return;
+  const d = dist(pos, MOTIF2_POS);
+
+  if (d < MOTIF2_TOUCH_RADIUS) {
+    discoverMotif2();
+  } else if (d < MOTIF2_NEAR_RADIUS) {
+    if (motif2State !== 'near') {
+      motif2State = 'near';
+      motif2El?.classList.add('near');
+    }
+    flashBadge('風を感じる...');
+  } else if (motif2State === 'near') {
+    motif2State = 'hidden';
+    motif2El?.classList.remove('near');
+  }
+}
+
+function discoverMotif2() {
+  motif2State = 'found';
+  motif2El?.classList.remove('near');
+  motif2El?.classList.add('found');
+
+  clearTimeout(badgeTimer);
+  const badge = document.getElementById('map-badge');
+  if (badge) badge.textContent = 'エリア探索中...';
+
+  showToast('風のしるしを見つけた', '+40 pt');
+  addPoints(40);
+  addKirokuRecord({ name: '風のしるし', pts: 40, dotClass: 'wind' });
+  saveState();
+}
+
 function showToast(title, pts) {
   const toast   = document.getElementById('discovery-toast');
   const titleEl = document.getElementById('toast-title');
@@ -282,7 +338,7 @@ function addKirokuRecord(item) {
   const card = document.createElement('div');
   card.className = 'record-card';
   card.innerHTML =
-    '<div class="record-icon-dot"></div>' +
+    '<div class="record-icon-dot' + (item.dotClass ? ' ' + item.dotClass : '') + '"></div>' +
     '<div class="record-body">' +
       '<p class="record-name">' + item.name + '</p>' +
       '<p class="record-meta">記憶のかけら</p>' +
@@ -299,6 +355,7 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_POINTS,  JSON.stringify(currentPoints));
     localStorage.setItem(STORAGE_MOTIF,   motifState);
+    localStorage.setItem(STORAGE_MOTIF2,  motif2State);
     localStorage.setItem(STORAGE_RECORDS, JSON.stringify(kirokuRecords));
   } catch(e) { /* プライベートブラウズ等で失敗しても続行 */ }
 }
@@ -311,8 +368,10 @@ function loadState() {
     const cells    = localStorage.getItem(STORAGE_CELLS);
     const savedPos = localStorage.getItem(STORAGE_POS);
 
+    const mst2 = localStorage.getItem(STORAGE_MOTIF2);
     if (pts      !== null) currentPoints = JSON.parse(pts);
     if (mst      !== null) motifState    = mst;
+    if (mst2     !== null) motif2State   = mst2;
     if (recs     !== null) JSON.parse(recs).forEach(item => addKirokuRecord(item));
     if (cells    !== null) JSON.parse(cells).forEach(c => restoreCell(c));
     if (savedPos !== null) {
@@ -440,18 +499,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. マップ初期化
   renderPin();
   initMotif();
+  initMotif2();
 
   // 4. 発見済みならモチーフに found クラスを適用
-  if (motifState === 'found' && motifEl) {
-    motifEl.classList.add('found');
-  }
+  if (motifState  === 'found' && motifEl)  motifEl.classList.add('found');
+  if (motif2State === 'found' && motif2El) motif2El.classList.add('found');
 
   // 5. D-pad バインド
   bindDpad();
 
   // 6. 開発用リセットボタン
   document.getElementById('dev-reset')?.addEventListener('click', () => {
-    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS].forEach(k => {
+    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
+     STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS].forEach(k => {
       try { localStorage.removeItem(k); } catch(e) {}
     });
     location.reload();
