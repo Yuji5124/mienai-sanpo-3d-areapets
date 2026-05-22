@@ -83,7 +83,8 @@
 
       <!-- 記録画面 -->
       <section class="screen" id="screen-kiroku">
-        <div class="empty-card">
+        <!-- 未発見時の空状態 -->
+        <div class="empty-card" id="kiroku-empty">
           <div class="empty-icon">
             <svg viewBox="0 0 40 40" fill="none">
               <rect x="6" y="4" width="28" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
@@ -95,6 +96,8 @@
           <p class="empty-title">記録はまだありません</p>
           <p class="empty-desc">さんぽして記録をためよう</p>
         </div>
+        <!-- 発見した記憶のリスト（JSで追加） -->
+        <div class="record-list" id="kiroku-list"></div>
       </section>
 
       <!-- 拠点画面 -->

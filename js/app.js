@@ -232,6 +232,7 @@ function discoverMotif() {
 
   showToast('水の記憶を見つけた', '+30 pt');
   addPoints(30);
+  addKirokuRecord({ name: '水の記憶', pts: 30 });
 }
 
 function showToast(title, pts) {
@@ -245,6 +246,28 @@ function showToast(title, pts) {
   toast.classList.add('show');
 
   setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+// ===========================
+// 記録画面への追加
+// ===========================
+function addKirokuRecord(item) {
+  const empty = document.getElementById('kiroku-empty');
+  const list  = document.getElementById('kiroku-list');
+  if (!list) return;
+
+  if (empty) empty.style.display = 'none';
+
+  const card = document.createElement('div');
+  card.className = 'record-card';
+  card.innerHTML =
+    '<div class="record-icon-dot"></div>' +
+    '<div class="record-body">' +
+      '<p class="record-name">' + item.name + '</p>' +
+      '<p class="record-meta">記憶のかけら</p>' +
+    '</div>' +
+    '<span class="record-pts">+' + item.pts + ' pt</span>';
+  list.appendChild(card);
 }
 
 // ===========================
