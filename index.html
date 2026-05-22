@@ -38,7 +38,7 @@
         </div>
 
         <!-- マップエリア -->
-        <div class="map-area">
+        <div class="map-area" id="map-area">
           <!-- 霧エフェクト（歩いた場所だけ光る） -->
           <div class="fog-layer"></div>
           <div class="revealed-zone z1"></div>
@@ -53,7 +53,24 @@
             <div class="location-dot"></div>
           </div>
           <!-- ステータスバッジ -->
-          <div class="map-badge">エリア探索中...</div>
+          <div class="map-badge" id="map-badge">エリア探索中...</div>
+
+          <!-- デモ移動コントロール -->
+          <div class="dpad">
+            <button class="dpad-btn" id="btn-up" aria-label="上へ移動">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+            </button>
+            <button class="dpad-btn" id="btn-left" aria-label="左へ移動">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>
+            </button>
+            <div class="dpad-center"></div>
+            <button class="dpad-btn" id="btn-right" aria-label="右へ移動">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            </button>
+            <button class="dpad-btn" id="btn-down" aria-label="下へ移動">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+          </div>
         </div>
 
       </section>

@@ -204,6 +204,7 @@ html, body {
   left: 50%;
   transform: translate(-50%, -50%);
   filter: blur(28px);
+  transition: top 0.35s ease-out, left 0.35s ease-out;
 }
 
 .z2 {
@@ -246,6 +247,7 @@ html, body {
   left: 50%;
   width: 0;
   height: 0;
+  transition: top 0.18s ease-out, left 0.18s ease-out;
 }
 
 .pulse-ring {
@@ -288,9 +290,8 @@ html, body {
 /* マップステータスバッジ */
 .map-badge {
   position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 14px;
+  left: 14px;
   background: rgba(17, 24, 39, 0.78);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -298,10 +299,11 @@ html, body {
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.6px;
-  padding: 7px 16px;
+  padding: 7px 14px;
   border-radius: 30px;
   border: 1px solid rgba(77, 184, 175, 0.25);
   white-space: nowrap;
+  z-index: 5;
 }
 
 /* ===========================
@@ -401,4 +403,78 @@ html, body {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.2px;
+}
+
+/* ===========================
+   デモ移動 D-pad
+   =========================== */
+.dpad {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 4px;
+  z-index: 10;
+}
+
+#btn-up      { grid-column: 2; grid-row: 1; }
+#btn-left    { grid-column: 1; grid-row: 2; }
+.dpad-center { grid-column: 2; grid-row: 2; }
+#btn-right   { grid-column: 3; grid-row: 2; }
+#btn-down    { grid-column: 2; grid-row: 3; }
+
+.dpad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(17, 24, 39, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(77, 184, 175, 0.3);
+  border-radius: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease;
+}
+
+.dpad-btn:active,
+.dpad-btn.pressed {
+  background: rgba(77, 184, 175, 0.4);
+  transform: scale(0.88);
+}
+
+.dpad-btn svg {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.dpad-center {
+  background: rgba(17, 24, 39, 0.35);
+  border-radius: 8px;
+  border: 1px solid rgba(77, 184, 175, 0.12);
+}
+
+/* ===========================
+   移動軌跡ドット
+   =========================== */
+.trail-dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: var(--teal);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: trail-fade 5s ease-out forwards;
+}
+
+@keyframes trail-fade {
+  0%   { opacity: 0.6;  transform: translate(-50%, -50%) scale(1); }
+  40%  { opacity: 0.35; }
+  100% { opacity: 0.08; transform: translate(-50%, -50%) scale(0.45); }
 }
