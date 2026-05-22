@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#ffffff">
+  <title>みえないさんぽ3D AREAPETS</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-inner">
+        <h1 class="title">みえないさんぽ3D</h1>
+        <span class="brand-badge">AREAPETS</span>
+      </div>
+      <p class="subtitle">歩いた記憶で、見えない地図が育つ</p>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+
+      <!-- さんぽ画面 -->
+      <section class="screen active" id="screen-sanpo">
+
+        <!-- ポイントカード -->
+        <div class="point-card">
+          <div class="point-info">
+            <span class="point-label">今日のポイント</span>
+            <div class="point-row">
+              <span class="point-value" id="point-display">0</span>
+              <span class="point-unit">pt</span>
+            </div>
+          </div>
+          <div class="point-gain">+12</div>
+        </div>
+
+        <!-- マップエリア -->
+        <div class="map-area">
+          <!-- 霧エフェクト（歩いた場所だけ光る） -->
+          <div class="fog-layer"></div>
+          <div class="revealed-zone z1"></div>
+          <div class="revealed-zone z2"></div>
+          <div class="revealed-zone z3"></div>
+          <!-- グリッドオーバーレイ -->
+          <div class="grid-overlay"></div>
+          <!-- 現在地アイコン -->
+          <div class="location-pin">
+            <div class="pulse-ring r1"></div>
+            <div class="pulse-ring r2"></div>
+            <div class="location-dot"></div>
+          </div>
+          <!-- ステータスバッジ -->
+          <div class="map-badge">エリア探索中...</div>
+        </div>
+
+      </section>
+
+      <!-- 記録画面 -->
+      <section class="screen" id="screen-kiroku">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 40 40" fill="none">
+              <rect x="6" y="4" width="28" height="32" rx="4" stroke="currentColor" stroke-width="2"/>
+              <line x1="12" y1="14" x2="28" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="20" x2="28" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <line x1="12" y1="26" x2="22" y2="26" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <p class="empty-title">記録はまだありません</p>
+          <p class="empty-desc">さんぽして記録をためよう</p>
+        </div>
+      </section>
+
+      <!-- 拠点画面 -->
+      <section class="screen" id="screen-kyoten">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 40 40" fill="none">
+              <path d="M4 20L20 6l16 14v16a2 2 0 0 1-2 2H26V26h-12v12H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <p class="empty-title">拠点がありません</p>
+          <p class="empty-desc">エリアを歩いて拠点を見つけよう</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 下部ナビゲーション -->
+    <nav class="bottom-nav">
+
+      <button class="nav-btn active" data-screen="sanpo">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="12" cy="12" r="8"/>
+          <circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>
+          <line x1="12" y1="2" x2="12" y2="5"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="5" y2="12"/>
+          <line x1="19" y1="12" x2="22" y2="12"/>
+        </svg>
+        <span class="nav-label">さんぽ</span>
+      </button>
+
+      <button class="nav-btn" data-screen="kiroku">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <rect x="4" y="3" width="16" height="18" rx="2"/>
+          <line x1="8" y1="9" x2="16" y2="9"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+          <line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>
+        <span class="nav-label">記録</span>
+      </button>
+
+      <button class="nav-btn" data-screen="kyoten">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12L12 4l9 8"/>
+          <path d="M5 10v9a1 1 0 0 0 1 1h4v-5h4v5h4a1 1 0 0 0 1-1v-9"/>
+        </svg>
+        <span class="nav-label">拠点</span>
+      </button>
+
+    </nav>
+
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

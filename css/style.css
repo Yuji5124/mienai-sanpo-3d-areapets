@@ -1,0 +1,404 @@
+/* ===========================
+   みえないさんぽ3D AREAPETS
+   style.css
+   =========================== */
+
+/* --- リセット & 変数 --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg:          #F2EDE6;
+  --surface:     #FFFFFF;
+  --teal:        #4DB8AF;
+  --teal-dark:   #349E96;
+  --teal-glow:   rgba(77, 184, 175, 0.35);
+  --map-bg:      #111827;
+  --map-mid:     #1E2A3A;
+  --text:        #1F2937;
+  --text-muted:  #9CA3AF;
+  --shadow-sm:   0 2px 10px rgba(0,0,0,0.07);
+  --shadow-md:   0 6px 24px rgba(0,0,0,0.13);
+  --r-sm: 14px;
+  --r-md: 20px;
+  --r-lg: 26px;
+}
+
+/* --- ベース --- */
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Kaku Gothic Pro', 'Hiragino Sans', 'Noto Sans JP',
+               'Yu Gothic', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- アプリシェル --- */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--bg);
+}
+
+/* ===========================
+   ヘッダー
+   =========================== */
+.header {
+  flex-shrink: 0;
+  background: var(--surface);
+  padding: 14px 20px 12px;
+  box-shadow: var(--shadow-sm);
+  z-index: 20;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  color: var(--text);
+}
+
+.brand-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: var(--teal);
+  background: rgba(77, 184, 175, 0.1);
+  border: 1px solid rgba(77, 184, 175, 0.25);
+  padding: 3px 9px;
+  border-radius: 30px;
+}
+
+.subtitle {
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.2px;
+}
+
+/* ===========================
+   メイン
+   =========================== */
+.main {
+  flex: 1;
+  min-height: 0;
+  padding: 14px 16px;
+  overflow: hidden;
+}
+
+/* --- 画面切り替え --- */
+.screen {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+.screen.active {
+  display: flex;
+}
+
+/* ===========================
+   ポイントカード
+   =========================== */
+.point-card {
+  flex-shrink: 0;
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.point-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.point-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.point-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.point-value {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.point-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.point-gain {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  padding: 5px 12px;
+  border-radius: 30px;
+  box-shadow: 0 2px 8px rgba(77, 184, 175, 0.35);
+}
+
+/* ===========================
+   マップエリア
+   =========================== */
+.map-area {
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  position: relative;
+  background: var(--map-bg);
+  box-shadow: var(--shadow-md);
+}
+
+/* 霧レイヤー */
+.fog-layer {
+  position: absolute;
+  inset: 0;
+  background: var(--map-bg);
+}
+
+/* 歩いた軌跡ゾーン（ぼかしグロー） */
+.revealed-zone {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.z1 {
+  width: 220px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(77,184,175,0.28) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: blur(28px);
+}
+
+.z2 {
+  width: 130px;
+  height: 110px;
+  background: radial-gradient(circle, rgba(77,184,175,0.18) 0%, transparent 70%);
+  top: 28%;
+  left: 32%;
+  transform: translate(-50%, -50%);
+  filter: blur(22px);
+}
+
+.z3 {
+  width: 100px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(129,218,210,0.14) 0%, transparent 70%);
+  top: 68%;
+  left: 66%;
+  transform: translate(-50%, -50%);
+  filter: blur(18px);
+}
+
+/* グリッドオーバーレイ */
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(77,184,175,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77,184,175,0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none;
+}
+
+/* ===========================
+   現在地アイコン
+   =========================== */
+.location-pin {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(77, 184, 175, 0.55);
+  transform: translate(-50%, -50%);
+  animation: pulse-out 2.4s ease-out infinite;
+}
+
+.r1 {
+  width: 36px;
+  height: 36px;
+}
+
+.r2 {
+  width: 56px;
+  height: 56px;
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse-out {
+  0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(0.7); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(1.6); }
+}
+
+.location-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--teal);
+  border-radius: 50%;
+  border: 2.5px solid #fff;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 0 0 3px rgba(77, 184, 175, 0.25),
+    0 0 16px rgba(77, 184, 175, 0.7);
+}
+
+/* マップステータスバッジ */
+.map-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(17, 24, 39, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #81E6D9;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  padding: 7px 16px;
+  border-radius: 30px;
+  border: 1px solid rgba(77, 184, 175, 0.25);
+  white-space: nowrap;
+}
+
+/* ===========================
+   空状態カード（記録・拠点）
+   =========================== */
+.empty-card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 52px 24px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--teal);
+  margin-bottom: 4px;
+}
+
+.empty-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.empty-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.empty-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ===========================
+   ボトムナビゲーション
+   =========================== */
+.bottom-nav {
+  flex-shrink: 0;
+  display: flex;
+  background: var(--surface);
+  box-shadow: 0 -2px 14px rgba(0,0,0,0.07);
+  padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
+  z-index: 20;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 0.18s ease;
+  position: relative;
+}
+
+.nav-btn.active {
+  color: var(--teal-dark);
+}
+
+/* アクティブインジケーター */
+.nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 2.5px;
+  background: var(--teal);
+  border-radius: 0 0 4px 4px;
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.15s ease;
+}
+
+.nav-btn:active .nav-icon {
+  transform: scale(0.88);
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
