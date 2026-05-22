@@ -111,11 +111,11 @@ const CELL_RADIUS = 5.5;   // 近傍判定の半径（%）
 
 // レベル別の大きさ・明度
 const CELL_CONFIG = [
-  { size: 12, opacity: 0.18 },  // lv1 初訪問 — かすかな光
-  { size: 16, opacity: 0.30 },  // lv2
-  { size: 20, opacity: 0.42 },  // lv3
-  { size: 24, opacity: 0.54 },  // lv4
-  { size: 28, opacity: 0.64 },  // lv5 何度も通る場所 — はっきりした光
+  { size: 8,  opacity: 0.13 },  // lv1 初訪問 — うっすら残る痕跡
+  { size: 11, opacity: 0.22 },  // lv2
+  { size: 14, opacity: 0.33 },  // lv3
+  { size: 17, opacity: 0.44 },  // lv4
+  { size: 21, opacity: 0.54 },  // lv5 よく通る場所 — じんわり光る
 ];
 
 let memoryCells = [];
