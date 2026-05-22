@@ -14,6 +14,32 @@ const STORAGE_CELLS   = 'areapets_cells';
 const STORAGE_POS     = 'areapets_pos';
 
 // ===========================
+// 木場公園 GPS 基準範囲（仮）
+// ===========================
+const PARK_BOUNDS = {
+  latMax: 35.6780,   // 北端（MOT より少し北）
+  latMin: 35.6650,   // 南端
+  lngMin: 139.8040,  // 西端
+  lngMax: 139.8130,  // 東端（運河を含む）
+};
+
+// 木場公園の矩形範囲内かどうかを判定（clamp 前の生座標で判定）
+function isInsidePark(lat, lng) {
+  return lat >= PARK_BOUNDS.latMin && lat <= PARK_BOUNDS.latMax &&
+         lng >= PARK_BOUNDS.lngMin && lng <= PARK_BOUNDS.lngMax;
+}
+
+// GPS緯度経度 → フィールド座標 (0〜100) に変換
+function gpsToField(lat, lng) {
+  const x = (lng - PARK_BOUNDS.lngMin) / (PARK_BOUNDS.lngMax - PARK_BOUNDS.lngMin) * 100;
+  const y = (PARK_BOUNDS.latMax - lat) / (PARK_BOUNDS.latMax - PARK_BOUNDS.latMin) * 100;
+  return {
+    x: Math.max(0, Math.min(100, x)),
+    y: Math.max(0, Math.min(100, y)),
+  };
+}
+
+// ===========================
 // ナビゲーション切り替え
 // ===========================
 const navButtons = document.querySelectorAll('.nav-btn');
@@ -533,9 +559,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navigator.geolocation.getCurrentPosition(
       pos => {
-        const lat = pos.coords.latitude.toFixed(6);
-        const lng = pos.coords.longitude.toFixed(6);
-        status.textContent = `現在地を確認しました (${lat}, ${lng})`;
+        const lat    = pos.coords.latitude;
+        const lng    = pos.coords.longitude;
+        const fld    = gpsToField(lat, lng);
+        const inside = isInsidePark(lat, lng);
+
+        const welcomeLine = inside
+          ? '<span class="gps-welcome">ようこそ木場公園へ</span>'
+          : '木場公園の近くで使えます';
+
+        status.innerHTML =
+          `現在地を確認しました\n` +
+          `${welcomeLine}\n` +
+          `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n` +
+          `MAP: x=${fld.x.toFixed(1)}, y=${fld.y.toFixed(1)}`;
       },
       _err => {
         status.textContent = '位置情報を取得できませんでした';

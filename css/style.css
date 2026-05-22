@@ -213,10 +213,15 @@ html, body {
 .gps-status {
   font-size: 10px;
   color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: pre-wrap;
+  line-height: 1.6;
   min-width: 0;
+}
+
+/* 公園内歓迎テキスト */
+.gps-welcome {
+  color: var(--teal-dark);
+  font-weight: 600;
 }
 
 /* ===========================
