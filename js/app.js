@@ -519,7 +519,32 @@ document.addEventListener('DOMContentLoaded', () => {
   // 5. D-pad バインド
   bindDpad();
 
-  // 6. 開発用リセットボタン
+  // 6. GPS確認ボタン
+  document.getElementById('gps-btn')?.addEventListener('click', () => {
+    const status = document.getElementById('gps-status');
+    if (!status) return;
+
+    if (!navigator.geolocation) {
+      status.textContent = '位置情報API非対応';
+      return;
+    }
+
+    status.textContent = '取得中...';
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        status.textContent = `現在地を確認しました (${lat}, ${lng})`;
+      },
+      _err => {
+        status.textContent = '位置情報を取得できませんでした';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
+
+  // 7. 開発用リセットボタン
   document.getElementById('dev-reset')?.addEventListener('click', () => {
     [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
      STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS].forEach(k => {

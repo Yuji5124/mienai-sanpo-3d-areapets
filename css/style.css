@@ -184,6 +184,42 @@ html, body {
 }
 
 /* ===========================
+   GPS 確認行
+   =========================== */
+.gps-row {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gps-btn {
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.gps-btn:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.gps-status {
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ===========================
    マップエリア
    =========================== */
 .map-area {

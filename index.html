@@ -38,78 +38,105 @@
           <div class="point-gain">+12</div>
         </div>
 
+        <!-- GPS確認行 -->
+        <div class="gps-row">
+          <button class="gps-btn" id="gps-btn">GPS確認</button>
+          <span class="gps-status" id="gps-status"></span>
+        </div>
+
         <!-- マップエリア -->
         <div class="map-area" id="map-area">
-          <!-- 霧エフェクト（歩いた場所だけ光る） -->
+          <!-- 霧エフェクト（常に map-area 全体に敷く暗い下地） -->
           <div class="fog-layer"></div>
 
-          <!-- 木場公園風 抽象背景マップ -->
-          <svg class="park-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <!-- フィールドワールド（4倍サイズ）：地図・記憶・モチーフが存在する世界 -->
+          <div id="field-world">
 
-            <!-- 東側運河 -->
-            <rect x="63" y="0" width="8" height="100" fill="rgba(80,160,220,0.08)"/>
+            <!-- 木場公園風 抽象背景マップ -->
+            <svg class="park-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <!-- vector-effect="non-scaling-stroke" でストローク幅を画面px固定 -->
+              <g vector-effect="non-scaling-stroke">
 
-            <!-- 南の大池 -->
-            <ellipse cx="35" cy="72" rx="21" ry="10" fill="rgba(80,160,220,0.09)"/>
+                <!-- 東側運河 -->
+                <rect x="63" y="0" width="8" height="100" fill="rgba(80,160,220,0.08)"/>
 
-            <!-- 北の小池 -->
-            <ellipse cx="46" cy="25" rx="9" ry="5" fill="rgba(80,160,220,0.07)"/>
+                <!-- 南の大池 -->
+                <ellipse cx="35" cy="72" rx="21" ry="10" fill="rgba(80,160,220,0.09)"/>
 
-            <!-- 公園輪郭 北エリア -->
-            <rect x="12" y="7" width="50" height="37" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
+                <!-- 北の小池 -->
+                <ellipse cx="46" cy="25" rx="9" ry="5" fill="rgba(80,160,220,0.07)"/>
 
-            <!-- 公園輪郭 南エリア -->
-            <rect x="7" y="49" width="55" height="43" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
+                <!-- 公園輪郭 北エリア -->
+                <rect x="12" y="7" width="50" height="37" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
 
-            <!-- 木場公園大橋 -->
-            <line x1="5"  y1="47" x2="72" y2="47" stroke="rgba(210,220,235,0.28)" stroke-width="1.8"/>
-            <line x1="5"  y1="49" x2="72" y2="49" stroke="rgba(210,220,235,0.12)" stroke-width="0.6"/>
+                <!-- 公園輪郭 南エリア -->
+                <rect x="7" y="49" width="55" height="43" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
 
-            <!-- 北側 芝生広場 -->
-            <ellipse cx="30" cy="22" rx="13" ry="8" fill="rgba(77,184,175,0.05)"/>
+                <!-- 木場公園大橋 -->
+                <line x1="5"  y1="47" x2="72" y2="47" stroke="rgba(210,220,235,0.28)" stroke-width="1.8"/>
+                <line x1="5"  y1="49" x2="72" y2="49" stroke="rgba(210,220,235,0.12)" stroke-width="0.6"/>
 
-            <!-- 南側 ひろば -->
-            <ellipse cx="27" cy="76" rx="11" ry="7" fill="rgba(77,184,175,0.05)"/>
+                <!-- 北側 芝生広場 -->
+                <ellipse cx="30" cy="22" rx="13" ry="8" fill="rgba(77,184,175,0.05)"/>
 
-            <!-- 木クラスター（北東） -->
-            <circle cx="52" cy="11" r="2.8" fill="rgba(110,185,110,0.13)"/>
-            <circle cx="57" cy="16" r="2.2" fill="rgba(110,185,110,0.11)"/>
-            <circle cx="54" cy="21" r="2.0" fill="rgba(110,185,110,0.10)"/>
-            <circle cx="49" cy="13" r="1.5" fill="rgba(110,185,110,0.09)"/>
-            <circle cx="59" cy="11" r="1.4" fill="rgba(110,185,110,0.08)"/>
+                <!-- 南側 ひろば -->
+                <ellipse cx="27" cy="76" rx="11" ry="7" fill="rgba(77,184,175,0.05)"/>
 
-            <!-- 木クラスター（南中） -->
-            <circle cx="50" cy="59" r="2.5" fill="rgba(110,185,110,0.11)"/>
-            <circle cx="55" cy="64" r="2.0" fill="rgba(110,185,110,0.10)"/>
-            <circle cx="52" cy="69" r="1.8" fill="rgba(110,185,110,0.09)"/>
-            <circle cx="47" cy="61" r="1.5" fill="rgba(110,185,110,0.08)"/>
+                <!-- 木クラスター（北東） -->
+                <circle cx="52" cy="11" r="2.8" fill="rgba(110,185,110,0.13)"/>
+                <circle cx="57" cy="16" r="2.2" fill="rgba(110,185,110,0.11)"/>
+                <circle cx="54" cy="21" r="2.0" fill="rgba(110,185,110,0.10)"/>
+                <circle cx="49" cy="13" r="1.5" fill="rgba(110,185,110,0.09)"/>
+                <circle cx="59" cy="11" r="1.4" fill="rgba(110,185,110,0.08)"/>
 
-            <!-- 木クラスター（西） -->
-            <circle cx="15" cy="30" r="1.8" fill="rgba(110,185,110,0.09)"/>
-            <circle cx="13" cy="36" r="1.5" fill="rgba(110,185,110,0.08)"/>
-            <circle cx="12" cy="63" r="1.8" fill="rgba(110,185,110,0.09)"/>
-            <circle cx="14" cy="69" r="1.5" fill="rgba(110,185,110,0.08)"/>
+                <!-- 木クラスター（南中） -->
+                <circle cx="50" cy="59" r="2.5" fill="rgba(110,185,110,0.11)"/>
+                <circle cx="55" cy="64" r="2.0" fill="rgba(110,185,110,0.10)"/>
+                <circle cx="52" cy="69" r="1.8" fill="rgba(110,185,110,0.09)"/>
+                <circle cx="47" cy="61" r="1.5" fill="rgba(110,185,110,0.08)"/>
 
-            <!-- ラベル: 美術館方面 -->
-            <text x="14" y="10" font-size="3.2" fill="rgba(255,255,255,0.18)" font-family="sans-serif">美術館方面 ↑</text>
+                <!-- 木クラスター（西） -->
+                <circle cx="15" cy="30" r="1.8" fill="rgba(110,185,110,0.09)"/>
+                <circle cx="13" cy="36" r="1.5" fill="rgba(110,185,110,0.08)"/>
+                <circle cx="12" cy="63" r="1.8" fill="rgba(110,185,110,0.09)"/>
+                <circle cx="14" cy="69" r="1.5" fill="rgba(110,185,110,0.08)"/>
 
-            <!-- ラベル: 橋 -->
-            <text x="15" y="44.5" font-size="2.6" fill="rgba(255,255,255,0.15)" font-family="sans-serif">木場公園大橋</text>
+                <!-- 美術館エリア（東京都現代美術館） -->
+                <rect x="14" y="9" width="20" height="8" rx="1"
+                      fill="rgba(150,155,180,0.08)"
+                      stroke="rgba(165,170,205,0.20)"
+                      stroke-width="0.6"/>
+                <line x1="21" y1="9"  x2="21" y2="17" stroke="rgba(165,170,205,0.10)" stroke-width="0.4"/>
+                <line x1="28" y1="9"  x2="28" y2="17" stroke="rgba(165,170,205,0.10)" stroke-width="0.4"/>
+                <rect x="18" y="17" width="12" height="6" rx="1" fill="rgba(150,155,180,0.05)"/>
+                <line x1="24" y1="23" x2="24" y2="32" stroke="rgba(200,205,220,0.14)" stroke-width="0.9"/>
+                <line x1="14" y1="23" x2="18" y2="23" stroke="rgba(200,205,220,0.10)" stroke-width="0.5"/>
+                <line x1="30" y1="23" x2="34" y2="23" stroke="rgba(200,205,220,0.10)" stroke-width="0.5"/>
 
-          </svg>
+                <!-- ラベル（font-sizeはフィールド座標系で指定） -->
+                <text x="17" y="15.2" font-size="0.75" fill="rgba(255,255,255,0.22)"
+                      font-family="sans-serif" font-weight="bold">MOT</text>
+                <text x="15" y="44.5" font-size="0.65" fill="rgba(255,255,255,0.15)"
+                      font-family="sans-serif">木場公園大橋</text>
 
-          <div class="revealed-zone z1"></div>
-          <div class="revealed-zone z2"></div>
-          <div class="revealed-zone z3"></div>
-          <!-- グリッドオーバーレイ -->
-          <div class="grid-overlay"></div>
-          <!-- 現在地アイコン -->
-          <div class="location-pin">
-            <div class="pulse-ring r1"></div>
-            <div class="pulse-ring r2"></div>
-            <div class="location-dot"></div>
-          </div>
-          <!-- ステータスバッジ -->
+              </g>
+            </svg>
+
+            <div class="revealed-zone z1"></div>
+            <div class="revealed-zone z2"></div>
+            <div class="revealed-zone z3"></div>
+            <!-- グリッドオーバーレイ -->
+            <div class="grid-overlay"></div>
+            <!-- 現在地アイコン -->
+            <div class="location-pin">
+              <div class="pulse-ring r1"></div>
+              <div class="pulse-ring r2"></div>
+              <div class="location-dot"></div>
+            </div>
+
+          </div><!-- /field-world -->
+
+          <!-- ステータスバッジ（map-area に固定表示） -->
           <div class="map-badge" id="map-badge">エリア探索中...</div>
 
           <!-- 発見トースト -->
