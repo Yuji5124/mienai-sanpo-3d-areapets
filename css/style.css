@@ -495,3 +495,90 @@ html, body {
   );
   transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
 }
+
+/* ===========================
+   隠れモチーフ
+   =========================== */
+.motif {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  /* 水の記憶 — 淡いブルー系で記憶セルと区別 */
+  background: radial-gradient(circle,
+    rgba(130, 200, 255, 0.85) 0%,
+    rgba(100, 170, 245, 0.2)  50%,
+    transparent               100%
+  );
+  opacity: 0.1;   /* 探索前はほぼ不可視 */
+  transition: opacity 0.7s ease, width 0.7s ease, height 0.7s ease;
+}
+
+/* 近づくと目覚める */
+.motif.near {
+  opacity: 0.72;
+  width: 24px;
+  height: 24px;
+  animation: motif-pulse 1.5s ease-in-out infinite;
+}
+
+/* 発見後は静かに輝く */
+.motif.found {
+  opacity: 0.88;
+  width: 28px;
+  height: 28px;
+  animation: none;
+}
+
+@keyframes motif-pulse {
+  0%, 100% { box-shadow: 0 0 0 0    rgba(130, 200, 255, 0.55); }
+  55%      { box-shadow: 0 0 0 11px rgba(130, 200, 255, 0); }
+}
+
+/* ===========================
+   発見トースト
+   =========================== */
+.discovery-toast {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  right: 16px;
+  transform: translateY(-50%) scale(0.86);
+  opacity: 0;
+  background: rgba(12, 18, 38, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(130, 200, 255, 0.35);
+  border-radius: 18px;
+  padding: 18px 20px 16px;
+  text-align: center;
+  z-index: 15;
+  pointer-events: none;
+  transition: opacity 0.3s ease,
+              transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.discovery-toast.show {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.toast-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.toast-pts {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: #93D9FF;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}

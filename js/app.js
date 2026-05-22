@@ -1,6 +1,6 @@
 // ===========================
 // みえないさんぽ3D AREAPETS
-// app.js — Step 3: 記憶地図
+// app.js — Step 4: 隠れモチーフ
 // ===========================
 
 // ===========================
@@ -20,8 +20,10 @@ navButtons.forEach(btn => {
 });
 
 // ===========================
-// ポイントカウンターアニメーション
+// ポイント管理
 // ===========================
+let currentPoints = 128;
+
 function animateCounter(el, target, duration) {
   const start = performance.now();
   function step(now) {
@@ -32,6 +34,22 @@ function animateCounter(el, target, duration) {
     if (progress < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
+}
+
+function addPoints(delta) {
+  const el   = document.getElementById('point-display');
+  if (!el) return;
+  const from = currentPoints;
+  currentPoints += delta;
+  const to   = currentPoints;
+  const t0   = performance.now();
+  const dur  = 700;
+  (function step(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * e);
+    if (p < 1) requestAnimationFrame(step);
+  })(performance.now());
 }
 
 // ===========================
@@ -49,7 +67,6 @@ function clamp(v) {
   return Math.max(BOUNDS.min, Math.min(BOUNDS.max, v));
 }
 
-// 現在地ドット＋グローを描画
 function renderPin() {
   const pin = document.querySelector('.location-pin');
   const z1  = document.querySelector('.z1');
@@ -63,7 +80,6 @@ function renderPin() {
   }
 }
 
-// 一時軌跡（5秒でフェードアウト）
 function addTrail(x, y) {
   const map = document.getElementById('map-area');
   if (!map) return;
@@ -72,14 +88,13 @@ function addTrail(x, y) {
   dot.className  = 'trail-dot';
   dot.style.left = x + '%';
   dot.style.top  = y + '%';
-  map.insertBefore(dot, pin);   // 現在地ドットの下のレイヤーに挿入
+  map.insertBefore(dot, pin);
   trails.push(dot);
   if (trails.length > MAX_TRAIL) {
     trails.shift().remove();
   }
 }
 
-// ステータスバッジの一時変更
 function flashBadge(text) {
   const badge = document.getElementById('map-badge');
   if (!badge) return;
@@ -90,37 +105,35 @@ function flashBadge(text) {
   }, 1200);
 }
 
-// 方向に移動
 function movePin(dx, dy) {
   const oldX = pos.x;
   const oldY = pos.y;
   pos.x = clamp(pos.x + dx * STEP);
   pos.y = clamp(pos.y + dy * STEP);
-  stampMemory(pos.x, pos.y);  // 到達した場所に記憶を刻む
-  addTrail(oldX, oldY);        // 出発した場所に一時軌跡
+  stampMemory(pos.x, pos.y);
+  addTrail(oldX, oldY);
   renderPin();
+  checkMotif();          // モチーフとの距離を判定
   flashBadge('移動中...');
 }
 
 // ===========================
 // 記憶地図（永続する足跡）
 // ===========================
-const MAX_MEMORY  = 80;    // セルの最大数
-const MAX_LEVEL   = 5;     // 1セルの最大輝度レベル
-const CELL_RADIUS = 5.5;   // 近傍判定の半径（%）
+const MAX_MEMORY  = 80;
+const MAX_LEVEL   = 5;
+const CELL_RADIUS = 5.5;
 
-// レベル別の大きさ・明度
 const CELL_CONFIG = [
-  { size: 8,  opacity: 0.13 },  // lv1 初訪問 — うっすら残る痕跡
-  { size: 11, opacity: 0.22 },  // lv2
-  { size: 14, opacity: 0.33 },  // lv3
-  { size: 17, opacity: 0.44 },  // lv4
-  { size: 21, opacity: 0.54 },  // lv5 よく通る場所 — じんわり光る
+  { size: 8,  opacity: 0.13 },
+  { size: 11, opacity: 0.22 },
+  { size: 14, opacity: 0.33 },
+  { size: 17, opacity: 0.44 },
+  { size: 21, opacity: 0.54 },
 ];
 
 let memoryCells = [];
 
-// 近くにセルがあれば返す
 function findNearbyCell(x, y) {
   return memoryCells.find(cell => {
     const dx = cell.x - x;
@@ -129,7 +142,6 @@ function findNearbyCell(x, y) {
   });
 }
 
-// セルにレベルを適用
 function applyLevel(cell) {
   const cfg = CELL_CONFIG[cell.level - 1];
   cell.el.style.width   = cfg.size + 'px';
@@ -137,7 +149,6 @@ function applyLevel(cell) {
   cell.el.style.opacity = cfg.opacity;
 }
 
-// 記憶セルを押し込む（既存セルならレベルアップ、なければ新規生成）
 function stampMemory(x, y) {
   const existing = findNearbyCell(x, y);
   if (existing) {
@@ -145,26 +156,95 @@ function stampMemory(x, y) {
     applyLevel(existing);
     return;
   }
-
   const map  = document.getElementById('map-area');
   if (!map) return;
-  const grid = map.querySelector('.grid-overlay'); // グリッドより奥のレイヤーに挿入
-
-  const el = document.createElement('div');
+  const grid = map.querySelector('.grid-overlay');
+  const el   = document.createElement('div');
   el.className   = 'memory-cell';
   el.style.left  = x + '%';
   el.style.top   = y + '%';
-
   const cell = { x, y, level: 1, el };
   applyLevel(cell);
-
   map.insertBefore(el, grid);
   memoryCells.push(cell);
-
-  // 上限を超えたら最も古いセルを除去
   if (memoryCells.length > MAX_MEMORY) {
     memoryCells.shift().el.remove();
   }
+}
+
+// ===========================
+// 隠れモチーフ（水の記憶）
+// ===========================
+const MOTIF_POS         = { x: 70, y: 30 };  // マップ右上エリア
+const MOTIF_NEAR_RADIUS = 16;   // この距離で目覚める
+const MOTIF_TOUCH_RADIUS = 6.5; // この距離で発見
+
+let motifEl    = null;
+let motifState = 'hidden';  // 'hidden' | 'near' | 'found'
+
+function initMotif() {
+  const map  = document.getElementById('map-area');
+  if (!map) return;
+  const grid = map.querySelector('.grid-overlay');
+
+  motifEl = document.createElement('div');
+  motifEl.className   = 'motif';
+  motifEl.style.left  = MOTIF_POS.x + '%';
+  motifEl.style.top   = MOTIF_POS.y + '%';
+  map.insertBefore(motifEl, grid);
+}
+
+function dist(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function checkMotif() {
+  if (motifState === 'found') return;
+  const d = dist(pos, MOTIF_POS);
+
+  if (d < MOTIF_TOUCH_RADIUS) {
+    discoverMotif();
+  } else if (d < MOTIF_NEAR_RADIUS) {
+    if (motifState !== 'near') {
+      motifState = 'near';
+      motifEl?.classList.remove('found');
+      motifEl?.classList.add('near');
+    }
+    flashBadge('何かが近い...');
+  } else if (motifState === 'near') {
+    // 離れたら元に戻す
+    motifState = 'hidden';
+    motifEl?.classList.remove('near');
+  }
+}
+
+function discoverMotif() {
+  motifState = 'found';
+  motifEl?.classList.remove('near');
+  motifEl?.classList.add('found');
+
+  // ステータスバッジをリセット
+  clearTimeout(badgeTimer);
+  const badge = document.getElementById('map-badge');
+  if (badge) badge.textContent = 'エリア探索中...';
+
+  showToast('水の記憶を見つけた', '+30 pt');
+  addPoints(30);
+}
+
+function showToast(title, pts) {
+  const toast   = document.getElementById('discovery-toast');
+  const titleEl = document.getElementById('toast-title');
+  const ptsEl   = document.getElementById('toast-pts');
+  if (!toast || !titleEl || !ptsEl) return;
+
+  titleEl.textContent = title;
+  ptsEl.textContent   = pts;
+  toast.classList.add('show');
+
+  setTimeout(() => toast.classList.remove('show'), 3200);
 }
 
 // ===========================
@@ -195,6 +275,8 @@ function bindDpad() {
 document.addEventListener('DOMContentLoaded', () => {
   const pointEl = document.getElementById('point-display');
   if (pointEl) animateCounter(pointEl, 128, 900);
+
   renderPin();
+  initMotif();
   bindDpad();
 });
