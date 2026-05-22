@@ -42,6 +42,62 @@
         <div class="map-area" id="map-area">
           <!-- 霧エフェクト（歩いた場所だけ光る） -->
           <div class="fog-layer"></div>
+
+          <!-- 木場公園風 抽象背景マップ -->
+          <svg class="park-map" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+
+            <!-- 東側運河 -->
+            <rect x="63" y="0" width="8" height="100" fill="rgba(80,160,220,0.08)"/>
+
+            <!-- 南の大池 -->
+            <ellipse cx="35" cy="72" rx="21" ry="10" fill="rgba(80,160,220,0.09)"/>
+
+            <!-- 北の小池 -->
+            <ellipse cx="46" cy="25" rx="9" ry="5" fill="rgba(80,160,220,0.07)"/>
+
+            <!-- 公園輪郭 北エリア -->
+            <rect x="12" y="7" width="50" height="37" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
+
+            <!-- 公園輪郭 南エリア -->
+            <rect x="7" y="49" width="55" height="43" rx="4" fill="none" stroke="rgba(77,184,175,0.12)" stroke-width="0.7"/>
+
+            <!-- 木場公園大橋 -->
+            <line x1="5"  y1="47" x2="72" y2="47" stroke="rgba(210,220,235,0.28)" stroke-width="1.8"/>
+            <line x1="5"  y1="49" x2="72" y2="49" stroke="rgba(210,220,235,0.12)" stroke-width="0.6"/>
+
+            <!-- 北側 芝生広場 -->
+            <ellipse cx="30" cy="22" rx="13" ry="8" fill="rgba(77,184,175,0.05)"/>
+
+            <!-- 南側 ひろば -->
+            <ellipse cx="27" cy="76" rx="11" ry="7" fill="rgba(77,184,175,0.05)"/>
+
+            <!-- 木クラスター（北東） -->
+            <circle cx="52" cy="11" r="2.8" fill="rgba(110,185,110,0.13)"/>
+            <circle cx="57" cy="16" r="2.2" fill="rgba(110,185,110,0.11)"/>
+            <circle cx="54" cy="21" r="2.0" fill="rgba(110,185,110,0.10)"/>
+            <circle cx="49" cy="13" r="1.5" fill="rgba(110,185,110,0.09)"/>
+            <circle cx="59" cy="11" r="1.4" fill="rgba(110,185,110,0.08)"/>
+
+            <!-- 木クラスター（南中） -->
+            <circle cx="50" cy="59" r="2.5" fill="rgba(110,185,110,0.11)"/>
+            <circle cx="55" cy="64" r="2.0" fill="rgba(110,185,110,0.10)"/>
+            <circle cx="52" cy="69" r="1.8" fill="rgba(110,185,110,0.09)"/>
+            <circle cx="47" cy="61" r="1.5" fill="rgba(110,185,110,0.08)"/>
+
+            <!-- 木クラスター（西） -->
+            <circle cx="15" cy="30" r="1.8" fill="rgba(110,185,110,0.09)"/>
+            <circle cx="13" cy="36" r="1.5" fill="rgba(110,185,110,0.08)"/>
+            <circle cx="12" cy="63" r="1.8" fill="rgba(110,185,110,0.09)"/>
+            <circle cx="14" cy="69" r="1.5" fill="rgba(110,185,110,0.08)"/>
+
+            <!-- ラベル: 美術館方面 -->
+            <text x="14" y="10" font-size="3.2" fill="rgba(255,255,255,0.18)" font-family="sans-serif">美術館方面 ↑</text>
+
+            <!-- ラベル: 橋 -->
+            <text x="15" y="44.5" font-size="2.6" fill="rgba(255,255,255,0.15)" font-family="sans-serif">木場公園大橋</text>
+
+          </svg>
+
           <div class="revealed-zone z1"></div>
           <div class="revealed-zone z2"></div>
           <div class="revealed-zone z3"></div>
@@ -103,7 +159,9 @@
 
       <!-- 拠点画面 -->
       <section class="screen" id="screen-kyoten">
-        <div class="empty-card">
+
+        <!-- 150pt 未満の空状態 -->
+        <div class="empty-card" id="kyoten-empty">
           <div class="empty-icon">
             <svg viewBox="0 0 40 40" fill="none">
               <path d="M4 20L20 6l16 14v16a2 2 0 0 1-2 2H26V26h-12v12H6a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
@@ -112,6 +170,30 @@
           <p class="empty-title">拠点がありません</p>
           <p class="empty-desc">エリアを歩いて拠点を見つけよう</p>
         </div>
+
+        <!-- 150pt 以上で表示 -->
+        <div class="base-card" id="kyoten-base">
+          <div class="base-visual">
+            <div class="base-light"></div>
+            <div class="base-floor"></div>
+          </div>
+          <div class="base-info">
+            <div class="base-title-row">
+              <span class="base-name">小さなAIDA拠点</span>
+              <span class="base-lv">Lv.1</span>
+            </div>
+            <p class="base-desc">歩いた記憶が、ここに集まりはじめた</p>
+          </div>
+        </div>
+
+        <!-- 次の目標（150pt 以上で表示） -->
+        <div class="goal-card" id="kyoten-goal">
+          <p class="goal-label" id="goal-label"></p>
+          <div class="goal-bar-track">
+            <div class="goal-bar-fill" id="goal-bar"></div>
+          </div>
+        </div>
+
       </section>
 
     </main>
