@@ -69,8 +69,8 @@ function addPoints(delta) {
 // ===========================
 // デモ移動システム
 // ===========================
-const STEP      = 6;
-const BOUNDS    = { min: 8, max: 92 };
+const STEP      = 3;
+const BOUNDS    = { min: 13, max: 87 };  // 4倍フィールドの端が画面外に出ないよう制限
 const MAX_TRAIL = 30;
 
 let pos        = { x: 50, y: 50 };
@@ -82,8 +82,9 @@ function clamp(v) {
 }
 
 function renderPin() {
-  const pin = document.querySelector('.location-pin');
-  const z1  = document.querySelector('.z1');
+  const pin   = document.querySelector('.location-pin');
+  const z1    = document.querySelector('.z1');
+  const field = document.getElementById('field-world');
   if (pin) {
     pin.style.left = pos.x + '%';
     pin.style.top  = pos.y + '%';
@@ -92,10 +93,16 @@ function renderPin() {
     z1.style.left = pos.x + '%';
     z1.style.top  = pos.y + '%';
   }
+  // field-world を平行移動して現在地をマップ中央に保つ
+  // left = (50 - pos.x * 4)% of map-area width
+  if (field) {
+    field.style.left = (50 - pos.x * 4) + '%';
+    field.style.top  = (50 - pos.y * 4) + '%';
+  }
 }
 
 function addTrail(x, y) {
-  const map = document.getElementById('map-area');
+  const map = document.getElementById('field-world');
   if (!map) return;
   const pin = map.querySelector('.location-pin');
   const dot = document.createElement('div');
@@ -141,7 +148,7 @@ function movePin(dx, dy) {
 // ===========================
 const MAX_MEMORY  = 80;
 const MAX_LEVEL   = 5;
-const CELL_RADIUS = 5.5;
+const CELL_RADIUS = 3;  // STEP=3 に合わせて縮小（1〜2歩ごとに新セル）
 
 const CELL_CONFIG = [
   { size: 8,  opacity: 0.13 },
@@ -176,7 +183,7 @@ function stampMemory(x, y) {
     applyLevel(existing);
     return existing.level > prev ? 'levelup' : null;
   }
-  const map  = document.getElementById('map-area');
+  const map  = document.getElementById('field-world');
   if (!map) return null;
   const grid = map.querySelector('.grid-overlay');
   const el   = document.createElement('div');
@@ -211,7 +218,7 @@ let motif2State   = 'hidden';
 let kirokuRecords = [];         // 保存・復元に使う記録の配列
 
 function initMotif() {
-  const map  = document.getElementById('map-area');
+  const map  = document.getElementById('field-world');
   if (!map) return;
   const grid = map.querySelector('.grid-overlay');
 
@@ -268,7 +275,7 @@ function discoverMotif() {
 // 隠れモチーフ2（風のしるし）
 // ===========================
 function initMotif2() {
-  const map  = document.getElementById('map-area');
+  const map  = document.getElementById('field-world');
   if (!map) return;
   const grid = map.querySelector('.grid-overlay');
 
@@ -399,7 +406,7 @@ function savePos() {
 }
 
 function restoreCell(c) {
-  const map  = document.getElementById('map-area');
+  const map  = document.getElementById('field-world');
   if (!map) return;
   const grid = map.querySelector('.grid-overlay');
   const el   = document.createElement('div');
@@ -500,6 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPin();
   initMotif();
   initMotif2();
+  // 初期位置確定後、次フレームからフィールドのスクロールトランジションを有効化
+  requestAnimationFrame(() => {
+    document.getElementById('field-world')?.classList.add('field-ready');
+  });
 
   // 4. 発見済みならモチーフに found クラスを適用
   if (motifState  === 'found' && motifEl)  motifEl.classList.add('found');

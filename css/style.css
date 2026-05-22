@@ -214,6 +214,21 @@ html, body {
   pointer-events: none;
 }
 
+/* ===========================
+   フィールドワールド
+   =========================== */
+#field-world {
+  position: absolute;
+  width: 400%;
+  height: 400%;
+  /* 初期位置は JS の renderPin() が設定。ロード後に field-ready クラスで遷移を有効化 */
+}
+
+#field-world.field-ready {
+  /* pin(0.18s)より長くすることで、ピンが少し先に進んでから背景が追いつく自然なラグを生む */
+  transition: top 0.38s ease-out, left 0.38s ease-out;
+}
+
 /* 歩いた軌跡ゾーン（ぼかしグロー） */
 .revealed-zone {
   position: absolute;
@@ -229,7 +244,7 @@ html, body {
   left: 50%;
   transform: translate(-50%, -50%);
   filter: blur(28px);
-  transition: top 0.35s ease-out, left 0.35s ease-out;
+  transition: top 0.18s ease-out, left 0.18s ease-out;
 }
 
 .z2 {
