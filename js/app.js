@@ -1,7 +1,14 @@
 // ===========================
 // みえないさんぽ3D AREAPETS
-// app.js — Step 4: 隠れモチーフ
+// app.js — Step 6: localStorage 保存
 // ===========================
+
+// ===========================
+// localStorage キー
+// ===========================
+const STORAGE_POINTS  = 'areapets_points';
+const STORAGE_MOTIF   = 'areapets_motif';
+const STORAGE_RECORDS = 'areapets_records';
 
 // ===========================
 // ナビゲーション切り替え
@@ -179,8 +186,9 @@ const MOTIF_POS         = { x: 70, y: 30 };  // マップ右上エリア
 const MOTIF_NEAR_RADIUS = 16;   // この距離で目覚める
 const MOTIF_TOUCH_RADIUS = 6.5; // この距離で発見
 
-let motifEl    = null;
-let motifState = 'hidden';  // 'hidden' | 'near' | 'found'
+let motifEl       = null;
+let motifState    = 'hidden';  // 'hidden' | 'near' | 'found'
+let kirokuRecords = [];         // 保存・復元に使う記録の配列
 
 function initMotif() {
   const map  = document.getElementById('map-area');
@@ -233,6 +241,7 @@ function discoverMotif() {
   showToast('水の記憶を見つけた', '+30 pt');
   addPoints(30);
   addKirokuRecord({ name: '水の記憶', pts: 30 });
+  saveState();
 }
 
 function showToast(title, pts) {
@@ -268,6 +277,31 @@ function addKirokuRecord(item) {
     '</div>' +
     '<span class="record-pts">+' + item.pts + ' pt</span>';
   list.appendChild(card);
+  kirokuRecords.push(item);
+}
+
+// ===========================
+// localStorage 保存・読み込み
+// ===========================
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_POINTS,  JSON.stringify(currentPoints));
+    localStorage.setItem(STORAGE_MOTIF,   motifState);
+    localStorage.setItem(STORAGE_RECORDS, JSON.stringify(kirokuRecords));
+  } catch(e) { /* プライベートブラウズ等で失敗しても続行 */ }
+}
+
+function loadState() {
+  try {
+    const pts  = localStorage.getItem(STORAGE_POINTS);
+    const mst  = localStorage.getItem(STORAGE_MOTIF);
+    const recs = localStorage.getItem(STORAGE_RECORDS);
+
+    if (pts  !== null) currentPoints = JSON.parse(pts);
+    if (mst  !== null) motifState    = mst;
+    // 記録は DOM 準備済みで呼ばれるので直接復元
+    if (recs !== null) JSON.parse(recs).forEach(item => addKirokuRecord(item));
+  } catch(e) {}
 }
 
 // ===========================
@@ -296,10 +330,36 @@ function bindDpad() {
 // 初期化
 // ===========================
 document.addEventListener('DOMContentLoaded', () => {
-  const pointEl = document.getElementById('point-display');
-  if (pointEl) animateCounter(pointEl, 128, 900);
+  // 1. 保存状態を読み込む（記録復元も含む）
+  loadState();
 
+  // 2. ポイント表示（保存済みなら直接、初回ならカウントアップ）
+  const pointEl = document.getElementById('point-display');
+  if (pointEl) {
+    if (localStorage.getItem(STORAGE_POINTS) !== null) {
+      pointEl.textContent = currentPoints;
+    } else {
+      animateCounter(pointEl, 128, 900);
+    }
+  }
+
+  // 3. マップ初期化
   renderPin();
   initMotif();
+
+  // 4. 発見済みならモチーフに found クラスを適用
+  if (motifState === 'found' && motifEl) {
+    motifEl.classList.add('found');
+  }
+
+  // 5. D-pad バインド
   bindDpad();
+
+  // 6. 開発用リセットボタン
+  document.getElementById('dev-reset')?.addEventListener('click', () => {
+    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_RECORDS].forEach(k => {
+      try { localStorage.removeItem(k); } catch(e) {}
+    });
+    location.reload();
+  });
 });

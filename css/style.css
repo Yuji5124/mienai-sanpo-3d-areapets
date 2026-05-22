@@ -84,6 +84,20 @@ html, body {
   border-radius: 30px;
 }
 
+/* 開発用リセットボタン */
+.dev-reset {
+  margin-left: auto;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+}
+
 .subtitle {
   margin-top: 5px;
   font-size: 11px;
