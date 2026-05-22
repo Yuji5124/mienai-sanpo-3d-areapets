@@ -524,11 +524,11 @@ html, body {
   animation: motif-pulse 1.5s ease-in-out infinite;
 }
 
-/* 発見後は静かに輝く */
+/* 発見後は静かに残る */
 .motif.found {
-  opacity: 0.88;
-  width: 28px;
-  height: 28px;
+  opacity: 0.52;
+  width: 22px;
+  height: 22px;
   animation: none;
 }
 
@@ -543,16 +543,16 @@ html, body {
 .discovery-toast {
   position: absolute;
   top: 50%;
-  left: 16px;
-  right: 16px;
-  transform: translateY(-50%) scale(0.86);
+  left: 30px;
+  right: 30px;
+  transform: translateY(-50%) scale(0.88);
   opacity: 0;
-  background: rgba(12, 18, 38, 0.92);
+  background: rgba(12, 18, 38, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(130, 200, 255, 0.35);
-  border-radius: 18px;
-  padding: 18px 20px 16px;
+  border: 1px solid rgba(130, 200, 255, 0.25);
+  border-radius: 16px;
+  padding: 14px 18px 12px;
   text-align: center;
   z-index: 15;
   pointer-events: none;
@@ -567,18 +567,17 @@ html, body {
 
 .toast-title {
   display: block;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
 }
 
 .toast-pts {
   display: block;
-  font-size: 28px;
-  font-weight: 800;
-  color: #93D9FF;
-  letter-spacing: -0.5px;
-  line-height: 1;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(147, 217, 255, 0.6);
+  letter-spacing: 0.3px;
 }

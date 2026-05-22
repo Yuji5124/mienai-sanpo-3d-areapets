@@ -113,8 +113,8 @@ function movePin(dx, dy) {
   stampMemory(pos.x, pos.y);
   addTrail(oldX, oldY);
   renderPin();
-  checkMotif();          // モチーフとの距離を判定
-  flashBadge('移動中...');
+  flashBadge('移動中...');  // checkMotif が近傍なら上書きする
+  checkMotif();
 }
 
 // ===========================
@@ -212,7 +212,7 @@ function checkMotif() {
       motifEl?.classList.remove('found');
       motifEl?.classList.add('near');
     }
-    flashBadge('何かが近い...');
+    flashBadge('何かを感じる...');
   } else if (motifState === 'near') {
     // 離れたら元に戻す
     motifState = 'hidden';
