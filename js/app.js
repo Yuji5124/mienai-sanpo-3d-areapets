@@ -47,9 +47,13 @@ function animateCounter(el, target, duration) {
 
 function addPoints(delta) {
   const el   = document.getElementById('point-display');
+  const gain = document.querySelector('.point-gain');
   if (!el) return;
   const from = currentPoints;
   currentPoints += delta;
+  checkKyoten();
+  if (gain) gain.textContent = '+' + delta;
+  saveState();
   const to   = currentPoints;
   const t0   = performance.now();
   const dur  = 700;
@@ -119,11 +123,13 @@ function movePin(dx, dy) {
   const oldY = pos.y;
   pos.x = clamp(pos.x + dx * STEP);
   pos.y = clamp(pos.y + dy * STEP);
-  stampMemory(pos.x, pos.y);
+  const memResult = stampMemory(pos.x, pos.y);
   addTrail(oldX, oldY);
   renderPin();
-  saveCells();   // 記憶セルを保存
-  savePos();     // 現在地を保存
+  saveCells();
+  savePos();
+  if (memResult === 'new')     addPoints(2);
+  if (memResult === 'levelup') addPoints(1);
   flashBadge('移動中...');  // checkMotif が近傍なら上書きする
   checkMotif();
 }
@@ -163,12 +169,13 @@ function applyLevel(cell) {
 function stampMemory(x, y) {
   const existing = findNearbyCell(x, y);
   if (existing) {
+    const prev = existing.level;
     existing.level = Math.min(existing.level + 1, MAX_LEVEL);
     applyLevel(existing);
-    return;
+    return existing.level > prev ? 'levelup' : null;
   }
   const map  = document.getElementById('map-area');
-  if (!map) return;
+  if (!map) return null;
   const grid = map.querySelector('.grid-overlay');
   const el   = document.createElement('div');
   el.className   = 'memory-cell';
@@ -181,6 +188,7 @@ function stampMemory(x, y) {
   if (memoryCells.length > MAX_MEMORY) {
     memoryCells.shift().el.remove();
   }
+  return 'new';
 }
 
 // ===========================
@@ -346,6 +354,50 @@ function restoreCell(c) {
 }
 
 // ===========================
+// AIDA 拠点 表示チェック
+// ===========================
+function checkKyoten() {
+  const empty = document.getElementById('kyoten-empty');
+  const base  = document.getElementById('kyoten-base');
+  if (!empty || !base) return;
+  if (currentPoints >= 150) {
+    empty.style.display = 'none';
+    base.classList.add('active');
+  } else {
+    empty.style.display = '';
+    base.classList.remove('active');
+  }
+  updateNextGoal();
+}
+
+function updateNextGoal() {
+  const card  = document.getElementById('kyoten-goal');
+  const label = document.getElementById('goal-label');
+  const bar   = document.getElementById('goal-bar');
+  if (!card || !label || !bar) return;
+
+  const BASE   = 150;
+  const TARGET = 250;
+
+  if (currentPoints < BASE) {
+    card.classList.remove('active');
+    return;
+  }
+
+  card.classList.add('active');
+
+  if (currentPoints >= TARGET) {
+    label.textContent = '次の変化を感じています';
+    bar.style.width   = '100%';
+  } else {
+    const left     = TARGET - currentPoints;
+    const progress = (currentPoints - BASE) / (TARGET - BASE);
+    label.textContent = '次の変化まで あと ' + left + 'pt';
+    bar.style.width   = (progress * 100).toFixed(1) + '%';
+  }
+}
+
+// ===========================
 // D-pad ボタン操作
 // ===========================
 const DPAD_MAP = {
@@ -373,6 +425,7 @@ function bindDpad() {
 document.addEventListener('DOMContentLoaded', () => {
   // 1. 保存状態を読み込む（記録復元も含む）
   loadState();
+  checkKyoten();
 
   // 2. ポイント表示（保存済みなら直接、初回ならカウントアップ）
   const pointEl = document.getElementById('point-display');
