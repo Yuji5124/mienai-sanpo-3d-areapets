@@ -9,6 +9,8 @@
 const STORAGE_POINTS  = 'areapets_points';
 const STORAGE_MOTIF   = 'areapets_motif';
 const STORAGE_RECORDS = 'areapets_records';
+const STORAGE_CELLS   = 'areapets_cells';
+const STORAGE_POS     = 'areapets_pos';
 
 // ===========================
 // ナビゲーション切り替え
@@ -120,6 +122,8 @@ function movePin(dx, dy) {
   stampMemory(pos.x, pos.y);
   addTrail(oldX, oldY);
   renderPin();
+  saveCells();   // 記憶セルを保存
+  savePos();     // 現在地を保存
   flashBadge('移動中...');  // checkMotif が近傍なら上書きする
   checkMotif();
 }
@@ -293,15 +297,52 @@ function saveState() {
 
 function loadState() {
   try {
-    const pts  = localStorage.getItem(STORAGE_POINTS);
-    const mst  = localStorage.getItem(STORAGE_MOTIF);
-    const recs = localStorage.getItem(STORAGE_RECORDS);
+    const pts      = localStorage.getItem(STORAGE_POINTS);
+    const mst      = localStorage.getItem(STORAGE_MOTIF);
+    const recs     = localStorage.getItem(STORAGE_RECORDS);
+    const cells    = localStorage.getItem(STORAGE_CELLS);
+    const savedPos = localStorage.getItem(STORAGE_POS);
 
-    if (pts  !== null) currentPoints = JSON.parse(pts);
-    if (mst  !== null) motifState    = mst;
-    // 記録は DOM 準備済みで呼ばれるので直接復元
-    if (recs !== null) JSON.parse(recs).forEach(item => addKirokuRecord(item));
+    if (pts      !== null) currentPoints = JSON.parse(pts);
+    if (mst      !== null) motifState    = mst;
+    if (recs     !== null) JSON.parse(recs).forEach(item => addKirokuRecord(item));
+    if (cells    !== null) JSON.parse(cells).forEach(c => restoreCell(c));
+    if (savedPos !== null) {
+      const p = JSON.parse(savedPos);
+      pos.x = p.x;
+      pos.y = p.y;
+    }
   } catch(e) {}
+}
+
+// ===========================
+// 記憶セル・位置の保存・復元
+// ===========================
+function saveCells() {
+  try {
+    const data = memoryCells.map(c => ({ x: c.x, y: c.y, level: c.level }));
+    localStorage.setItem(STORAGE_CELLS, JSON.stringify(data));
+  } catch(e) {}
+}
+
+function savePos() {
+  try {
+    localStorage.setItem(STORAGE_POS, JSON.stringify({ x: pos.x, y: pos.y }));
+  } catch(e) {}
+}
+
+function restoreCell(c) {
+  const map  = document.getElementById('map-area');
+  if (!map) return;
+  const grid = map.querySelector('.grid-overlay');
+  const el   = document.createElement('div');
+  el.className   = 'memory-cell';
+  el.style.left  = c.x + '%';
+  el.style.top   = c.y + '%';
+  const cell = { x: c.x, y: c.y, level: c.level, el };
+  applyLevel(cell);
+  map.insertBefore(el, grid);
+  memoryCells.push(cell);
 }
 
 // ===========================
@@ -357,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 6. 開発用リセットボタン
   document.getElementById('dev-reset')?.addEventListener('click', () => {
-    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_RECORDS].forEach(k => {
+    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS].forEach(k => {
       try { localStorage.removeItem(k); } catch(e) {}
     });
     location.reload();
