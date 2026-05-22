@@ -1,6 +1,6 @@
 // ===========================
 // みえないさんぽ3D AREAPETS
-// app.js — Step 2: デモ移動
+// app.js — Step 3: 記憶地図
 // ===========================
 
 // ===========================
@@ -37,12 +37,12 @@ function animateCounter(el, target, duration) {
 // ===========================
 // デモ移動システム
 // ===========================
-const STEP      = 6;   // 1回の移動量（%）
+const STEP      = 6;
 const BOUNDS    = { min: 8, max: 92 };
-const MAX_TRAIL = 30;  // 軌跡ドットの上限
+const MAX_TRAIL = 30;
 
-let pos    = { x: 50, y: 50 };
-let trails = [];
+let pos        = { x: 50, y: 50 };
+let trails     = [];
 let badgeTimer = null;
 
 function clamp(v) {
@@ -63,22 +63,23 @@ function renderPin() {
   }
 }
 
-// 軌跡ドットを追加
+// 一時軌跡（5秒でフェードアウト）
 function addTrail(x, y) {
   const map = document.getElementById('map-area');
   if (!map) return;
+  const pin = map.querySelector('.location-pin');
   const dot = document.createElement('div');
-  dot.className = 'trail-dot';
+  dot.className  = 'trail-dot';
   dot.style.left = x + '%';
   dot.style.top  = y + '%';
-  map.appendChild(dot);
+  map.insertBefore(dot, pin);   // 現在地ドットの下のレイヤーに挿入
   trails.push(dot);
   if (trails.length > MAX_TRAIL) {
     trails.shift().remove();
   }
 }
 
-// ステータスバッジを一時的に変更
+// ステータスバッジの一時変更
 function flashBadge(text) {
   const badge = document.getElementById('map-badge');
   if (!badge) return;
@@ -91,11 +92,79 @@ function flashBadge(text) {
 
 // 方向に移動
 function movePin(dx, dy) {
-  addTrail(pos.x, pos.y);
+  const oldX = pos.x;
+  const oldY = pos.y;
   pos.x = clamp(pos.x + dx * STEP);
   pos.y = clamp(pos.y + dy * STEP);
+  stampMemory(pos.x, pos.y);  // 到達した場所に記憶を刻む
+  addTrail(oldX, oldY);        // 出発した場所に一時軌跡
   renderPin();
   flashBadge('移動中...');
+}
+
+// ===========================
+// 記憶地図（永続する足跡）
+// ===========================
+const MAX_MEMORY  = 80;    // セルの最大数
+const MAX_LEVEL   = 5;     // 1セルの最大輝度レベル
+const CELL_RADIUS = 5.5;   // 近傍判定の半径（%）
+
+// レベル別の大きさ・明度
+const CELL_CONFIG = [
+  { size: 12, opacity: 0.18 },  // lv1 初訪問 — かすかな光
+  { size: 16, opacity: 0.30 },  // lv2
+  { size: 20, opacity: 0.42 },  // lv3
+  { size: 24, opacity: 0.54 },  // lv4
+  { size: 28, opacity: 0.64 },  // lv5 何度も通る場所 — はっきりした光
+];
+
+let memoryCells = [];
+
+// 近くにセルがあれば返す
+function findNearbyCell(x, y) {
+  return memoryCells.find(cell => {
+    const dx = cell.x - x;
+    const dy = cell.y - y;
+    return Math.sqrt(dx * dx + dy * dy) < CELL_RADIUS;
+  });
+}
+
+// セルにレベルを適用
+function applyLevel(cell) {
+  const cfg = CELL_CONFIG[cell.level - 1];
+  cell.el.style.width   = cfg.size + 'px';
+  cell.el.style.height  = cfg.size + 'px';
+  cell.el.style.opacity = cfg.opacity;
+}
+
+// 記憶セルを押し込む（既存セルならレベルアップ、なければ新規生成）
+function stampMemory(x, y) {
+  const existing = findNearbyCell(x, y);
+  if (existing) {
+    existing.level = Math.min(existing.level + 1, MAX_LEVEL);
+    applyLevel(existing);
+    return;
+  }
+
+  const map  = document.getElementById('map-area');
+  if (!map) return;
+  const grid = map.querySelector('.grid-overlay'); // グリッドより奥のレイヤーに挿入
+
+  const el = document.createElement('div');
+  el.className   = 'memory-cell';
+  el.style.left  = x + '%';
+  el.style.top   = y + '%';
+
+  const cell = { x, y, level: 1, el };
+  applyLevel(cell);
+
+  map.insertBefore(el, grid);
+  memoryCells.push(cell);
+
+  // 上限を超えたら最も古いセルを除去
+  if (memoryCells.length > MAX_MEMORY) {
+    memoryCells.shift().el.remove();
+  }
 }
 
 // ===========================
@@ -112,14 +181,10 @@ function bindDpad() {
   Object.entries(DPAD_MAP).forEach(([id, [dx, dy]]) => {
     const btn = document.getElementById(id);
     if (!btn) return;
-
-    // タッチ優先（preventDefault でダブルタップズームも防ぐ）
     btn.addEventListener('touchstart', e => {
       e.preventDefault();
       movePin(dx, dy);
     }, { passive: false });
-
-    // マウス・キーボード用フォールバック
     btn.addEventListener('click', () => movePin(dx, dy));
   });
 }
@@ -130,7 +195,6 @@ function bindDpad() {
 document.addEventListener('DOMContentLoaded', () => {
   const pointEl = document.getElementById('point-display');
   if (pointEl) animateCounter(pointEl, 128, 900);
-
   renderPin();
   bindDpad();
 });
