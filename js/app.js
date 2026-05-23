@@ -116,6 +116,44 @@ function addSteps(delta) {
 }
 
 // ===========================
+// Ouchi Colon 同行
+// ===========================
+const COMPANION_REACTS = [
+  'いい感じ',
+  'なにかありそう',
+  'いっしょに歩こう',
+  'ここ、すきかも',
+  'もう少し先へ',
+  'なんかある気がする',
+];
+
+let reactTimer = null;
+let moveCount  = 0;
+let nextReact  = randomNextReact();
+
+function randomNextReact() {
+  return 4 + Math.floor(Math.random() * 5);  // 4〜8歩ごと
+}
+
+function showCompanionReact(msg) {
+  const el = document.getElementById('companion-react');
+  if (!el) return;
+  el.textContent = msg;
+  clearTimeout(reactTimer);
+  reactTimer = setTimeout(() => { el.textContent = ''; }, 2200);
+}
+
+function tickCompanion() {
+  moveCount++;
+  if (moveCount >= nextReact) {
+    moveCount = 0;
+    nextReact = randomNextReact();
+    const msg = COMPANION_REACTS[Math.floor(Math.random() * COMPANION_REACTS.length)];
+    showCompanionReact(msg);
+  }
+}
+
+// ===========================
 // デモ移動システム
 // ===========================
 const STEP      = 3;
@@ -190,6 +228,7 @@ function movePin(dx, dy) {
   flashBadge('移動中...');  // checkMotif* が近傍なら上書きする
   checkMotif();
   checkMotif2();
+  tickCompanion();
 }
 
 // ===========================
