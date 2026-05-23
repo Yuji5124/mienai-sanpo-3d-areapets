@@ -12,6 +12,7 @@ const STORAGE_MOTIF2  = 'areapets_motif2';
 const STORAGE_RECORDS = 'areapets_records';
 const STORAGE_CELLS   = 'areapets_cells';
 const STORAGE_POS     = 'areapets_pos';
+const STORAGE_STEPS   = 'areapets_steps';
 
 // ===========================
 // 木場公園 GPS 基準範囲（仮）
@@ -93,6 +94,28 @@ function addPoints(delta) {
 }
 
 // ===========================
+// 暫定歩数
+// ===========================
+let currentSteps  = 0;
+let stepGainTimer = null;
+
+function flashStepGain(delta) {
+  const el = document.getElementById('step-gain');
+  if (!el) return;
+  el.textContent = '+' + delta + '歩';
+  clearTimeout(stepGainTimer);
+  stepGainTimer = setTimeout(() => { el.textContent = ''; }, 1500);
+}
+
+function addSteps(delta) {
+  currentSteps += delta;
+  const el = document.getElementById('step-display');
+  if (el) el.textContent = currentSteps.toLocaleString();
+  flashStepGain(delta);
+  saveState();
+}
+
+// ===========================
 // デモ移動システム
 // ===========================
 const STEP      = 3;
@@ -162,8 +185,8 @@ function movePin(dx, dy) {
   renderPin();
   saveCells();
   savePos();
-  if (memResult === 'new')     addPoints(2);
-  if (memResult === 'levelup') addPoints(1);
+  if (memResult === 'new')     { addPoints(2); addSteps(12); }
+  if (memResult === 'levelup') { addPoints(1); addSteps(6); }
   flashBadge('移動中...');  // checkMotif* が近傍なら上書きする
   checkMotif();
   checkMotif2();
@@ -390,6 +413,7 @@ function saveState() {
     localStorage.setItem(STORAGE_MOTIF,   motifState);
     localStorage.setItem(STORAGE_MOTIF2,  motif2State);
     localStorage.setItem(STORAGE_RECORDS, JSON.stringify(kirokuRecords));
+    localStorage.setItem(STORAGE_STEPS,   JSON.stringify(currentSteps));
   } catch(e) { /* プライベートブラウズ等で失敗しても続行 */ }
 }
 
@@ -412,6 +436,8 @@ function loadState() {
       pos.x = p.x;
       pos.y = p.y;
     }
+    const steps = localStorage.getItem(STORAGE_STEPS);
+    if (steps !== null) currentSteps = JSON.parse(steps);
   } catch(e) {}
 }
 
@@ -519,7 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadState();
   checkKyoten();
 
-  // 2. ポイント表示（保存済みなら直接、初回ならカウントアップ）
+  // 2. ポイント・暫定歩数表示
+  const stepEl = document.getElementById('step-display');
+  if (stepEl) stepEl.textContent = currentSteps.toLocaleString();
+
   const pointEl = document.getElementById('point-display');
   if (pointEl) {
     if (localStorage.getItem(STORAGE_POINTS) !== null) {
@@ -570,6 +599,17 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPin();
         savePos();
 
+        // 公園内なら記憶セルを1回刻む
+        let memLine = '';
+        if (inside) {
+          const memResult = stampMemory(pos.x, pos.y);
+          saveCells();
+          if (memResult === 'new')     addPoints(2);
+          if (memResult === 'levelup') addPoints(1);
+          addSteps(20);
+          memLine = '\n現在地の記憶を刻みました';
+        }
+
         const welcomeLine = inside
           ? '<span class="gps-welcome">ようこそ木場公園へ</span>'
           : '木場公園の近くで使えます';
@@ -578,7 +618,8 @@ document.addEventListener('DOMContentLoaded', () => {
           `現在地を確認しました\n` +
           `${welcomeLine}\n` +
           `GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}\n` +
-          `MAP: x=${fld.x.toFixed(1)}, y=${fld.y.toFixed(1)}`;
+          `MAP: x=${fld.x.toFixed(1)}, y=${fld.y.toFixed(1)}` +
+          memLine;
       },
       _err => {
         status.textContent = '位置情報を取得できませんでした';
@@ -590,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 7. 開発用リセットボタン
   document.getElementById('dev-reset')?.addEventListener('click', () => {
     [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
-     STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS].forEach(k => {
+     STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS].forEach(k => {
       try { localStorage.removeItem(k); } catch(e) {}
     });
     location.reload();

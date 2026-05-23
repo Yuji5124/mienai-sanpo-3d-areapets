@@ -136,11 +136,11 @@ html, body {
   padding: 14px 18px;
   box-shadow: var(--shadow-sm);
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
 .point-info {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -181,6 +181,58 @@ html, body {
   border: 1px solid rgba(77, 184, 175, 0.28);
   padding: 4px 10px;
   border-radius: 30px;
+}
+
+/* ===========================
+   暫定歩数
+   =========================== */
+.card-divider {
+  width: 1px;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.07);
+  flex-shrink: 0;
+  margin: 0 12px;
+}
+
+.step-info {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.step-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.step-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.step-gain {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--teal-dark);
+  min-height: 14px;
 }
 
 /* ===========================
