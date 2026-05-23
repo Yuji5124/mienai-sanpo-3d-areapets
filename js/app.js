@@ -228,7 +228,10 @@ function movePin(dx, dy) {
   flashBadge('移動中...');  // checkMotif* が近傍なら上書きする
   checkMotif();
   checkMotif2();
+  checkEventSpot();
   tickCompanion();
+  checkSpotProximity();
+  updateMapBrightness();
 }
 
 // ===========================
@@ -299,11 +302,17 @@ const MOTIF2_POS          = { x: 25, y: 75 };  // マップ左下エリア
 const MOTIF2_NEAR_RADIUS  = 16;
 const MOTIF2_TOUCH_RADIUS = 6.5;
 
-let motifEl       = null;
-let motifState    = 'hidden';  // 'hidden' | 'near' | 'found'
-let motif2El      = null;
-let motif2State   = 'hidden';
-let kirokuRecords = [];         // 保存・復元に使う記録の配列
+const EVENT_POS          = { x: 48, y: 60 };  // 公園南側エリア
+const EVENT_NEAR_RADIUS  = 22;
+const EVENT_CLOSE_RADIUS = 10;
+
+let motifEl        = null;
+let motifState     = 'hidden';  // 'hidden' | 'near' | 'found'
+let motif2El       = null;
+let motif2State    = 'hidden';
+let eventSpotEl    = null;
+let eventSpotState = 'hidden';  // 'hidden' | 'near' | 'close'
+let kirokuRecords  = [];         // 保存・復元に使う記録の配列
 
 function initMotif() {
   const map  = document.getElementById('field-world');
@@ -405,6 +414,132 @@ function discoverMotif2() {
   addPoints(40);
   addKirokuRecord({ name: '風のしるし', pts: 40, dotClass: 'wind' });
   saveState();
+}
+
+// ===========================
+// AREA PETSイベント予告
+// ===========================
+function initEventSpot() {
+  const map  = document.getElementById('field-world');
+  if (!map) return;
+  const grid = map.querySelector('.grid-overlay');
+  eventSpotEl = document.createElement('div');
+  eventSpotEl.className  = 'event-spot';
+  eventSpotEl.style.left = EVENT_POS.x + '%';
+  eventSpotEl.style.top  = EVENT_POS.y + '%';
+  map.insertBefore(eventSpotEl, grid);
+}
+
+function checkEventSpot() {
+  const d = dist(pos, EVENT_POS);
+
+  if (d < EVENT_CLOSE_RADIUS) {
+    if (eventSpotState !== 'close') {
+      eventSpotState = 'close';
+      eventSpotEl?.classList.remove('near');
+      eventSpotEl?.classList.add('close');
+    }
+    flashBadge('AREA PETSイベント準備中');
+  } else if (d < EVENT_NEAR_RADIUS) {
+    if (eventSpotState !== 'near') {
+      eventSpotState = 'near';
+      eventSpotEl?.classList.remove('close');
+      eventSpotEl?.classList.add('near');
+    }
+    flashBadge('AREA PETSの気配がします');
+  } else if (eventSpotState !== 'hidden') {
+    eventSpotState = 'hidden';
+    eventSpotEl?.classList.remove('near', 'close');
+  }
+}
+
+// ===========================
+// 木場公園スポット (Step 20)
+// ===========================
+const PARK_SPOTS = [
+  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 25, y: 11, type: 'mot',     nearR: 8  },
+  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 16, y: 19, type: 'mot',     nearR: 8  },
+  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 33, y: 16, type: 'mot',     nearR: 8  },
+  { id: 'hakken',      name: '発見の塔',        x: 36, y: 22, type: 'magical', nearR: 9  },
+  { id: 'kagayaki',    name: '輝きの塔',        x: 38, y: 27, type: 'magical', nearR: 9  },
+  { id: 'kita-bouken', name: '北の冒険広場',    x: 43, y: 30, type: 'area',    nearR: 10 },
+  { id: 'tenshi',      name: '天使のリング',    x: 27, y: 33, type: 'magical', nearR: 8  },
+  { id: 'toilet-6',    name: '6号トイレ',       x: 21, y: 27, type: 'real',    nearR: 7  },
+];
+
+const SPOT_OPACITY_CFG = {
+  magical: { base: 0.02, max: 0.50 },
+  mot:     { base: 0.04, max: 0.58 },
+  area:    { base: 0.04, max: 0.52 },
+  real:    { base: 0.06, max: 0.38 },
+};
+
+let spotNodes = {};  // id → { el, isNear }
+
+function calcSpotOpacity(type, cellCount) {
+  const cfg = SPOT_OPACITY_CFG[type] || SPOT_OPACITY_CFG.area;
+  const t   = Math.min(cellCount / 55, 1);
+  return +(cfg.base + (cfg.max - cfg.base) * t).toFixed(3);
+}
+
+function calcFogOpacity(cellCount) {
+  const t = Math.min(cellCount / 60, 1);
+  return +(0.88 - 0.72 * t).toFixed(3);  // 0.88 → 0.16
+}
+
+function updateMapBrightness() {
+  const cells = memoryCells.length;
+  const fog   = document.getElementById('park-fog');
+  if (fog) fog.style.opacity = calcFogOpacity(cells);
+
+  PARK_SPOTS.forEach(spot => {
+    const data = spotNodes[spot.id];
+    if (!data || data.isNear) return;
+    data.el.style.opacity = calcSpotOpacity(spot.type, cells);
+  });
+}
+
+function initSpots() {
+  const map = document.getElementById('field-world');
+  if (!map) return;
+  const z1  = map.querySelector('.z1');
+
+  PARK_SPOTS.forEach(spot => {
+    const el         = document.createElement('div');
+    el.className     = 'park-spot ' + spot.type;
+    el.style.left    = spot.x + '%';
+    el.style.top     = spot.y + '%';
+    el.style.opacity = SPOT_OPACITY_CFG[spot.type].base;
+
+    const label       = document.createElement('div');
+    label.className   = 'park-spot-label';
+    label.textContent = spot.name;
+    el.appendChild(label);
+
+    map.insertBefore(el, z1);
+    spotNodes[spot.id] = { el, isNear: false };
+  });
+}
+
+function checkSpotProximity() {
+  const cells = memoryCells.length;
+  PARK_SPOTS.forEach(spot => {
+    const data = spotNodes[spot.id];
+    if (!data) return;
+    const d = dist(pos, spot);
+
+    if (d < spot.nearR) {
+      if (!data.isNear) {
+        data.isNear = true;
+        data.el.style.opacity = '0.85';
+        data.el.classList.add('near');
+      }
+    } else if (data.isNear) {
+      data.isNear = false;
+      data.el.classList.remove('near');
+      data.el.style.opacity = calcSpotOpacity(spot.type, cells);
+    }
+  });
 }
 
 function showToast(title, pts) {
@@ -601,6 +736,19 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPin();
   initMotif();
   initMotif2();
+  initEventSpot();
+  initSpots();
+
+  // Step 20: 保存済みセル数に応じた初期明暗をアニメーションなしで即反映
+  const parkFog = document.getElementById('park-fog');
+  if (parkFog) parkFog.setAttribute('data-instant', '');
+  updateMapBrightness();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById('park-fog')?.removeAttribute('data-instant');
+    });
+  });
+
   // 初期位置確定後、次フレームからフィールドのスクロールトランジションを有効化
   requestAnimationFrame(() => {
     document.getElementById('field-world')?.classList.add('field-ready');
