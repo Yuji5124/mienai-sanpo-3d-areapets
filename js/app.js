@@ -13,6 +13,7 @@ const STORAGE_RECORDS = 'areapets_records';
 const STORAGE_CELLS   = 'areapets_cells';
 const STORAGE_POS     = 'areapets_pos';
 const STORAGE_STEPS   = 'areapets_steps';
+const STORAGE_EVENT   = 'areapets_event';   // Step 22: AREA PETS 足あと発見状態
 
 // ===========================
 // 木場公園 GPS 基準範囲（仮）
@@ -316,8 +317,16 @@ let motifState     = 'hidden';  // 'hidden' | 'near' | 'found'
 let motif2El       = null;
 let motif2State    = 'hidden';
 let eventSpotEl    = null;
-let eventSpotState = 'hidden';  // 'hidden' | 'near' | 'close'
-let kirokuRecords  = [];         // 保存・復元に使う記録の配列
+let eventSpotState = 'hidden';  // 'hidden' | 'near' | 'close' | 'found'
+let eventFound     = false;     // Step 22: true になると再発生しない
+let kirokuRecords  = [];        // 保存・復元に使う記録の配列
+
+// AREA PETS 発見時の KAKUBAKE リアクション (Step 22)
+const AREAPETS_DISCOVER_REACTS = [
+  'なにかいたみたい',
+  '足あと、みつけた',
+  'そばにいるね',
+];
 
 function initMotif() {
   const map  = document.getElementById('field-world');
@@ -422,7 +431,7 @@ function discoverMotif2() {
 }
 
 // ===========================
-// AREA PETSイベント予告
+// AREA PETSイベント ─ 足あと (Step 22)
 // ===========================
 function initEventSpot() {
   const map  = document.getElementById('field-world');
@@ -436,26 +445,59 @@ function initEventSpot() {
 }
 
 function checkEventSpot() {
+  if (eventFound) return;  // 発見済み ─ 再発生しない
   const d = dist(pos, EVENT_POS);
 
   if (d < EVENT_CLOSE_RADIUS) {
-    if (eventSpotState !== 'close') {
-      eventSpotState = 'close';
-      eventSpotEl?.classList.remove('near');
-      eventSpotEl?.classList.add('close');
-    }
-    flashBadge('AREA PETSイベント準備中');
+    discoverAreaPets();    // close 判定で初回のみ発生
   } else if (d < EVENT_NEAR_RADIUS) {
     if (eventSpotState !== 'near') {
       eventSpotState = 'near';
       eventSpotEl?.classList.remove('close');
       eventSpotEl?.classList.add('near');
     }
-    flashBadge('AREA PETSの気配がします');
+    flashBadge('AREA PETSの気配がします...');
   } else if (eventSpotState !== 'hidden') {
     eventSpotState = 'hidden';
     eventSpotEl?.classList.remove('near', 'close');
   }
+}
+
+// AREA PETS「足あと」─ 初回発見イベント本体
+function discoverAreaPets() {
+  eventFound     = true;
+  eventSpotState = 'found';
+  if (eventSpotEl) {
+    eventSpotEl.classList.remove('near', 'close');
+    eventSpotEl.classList.add('found');
+  }
+
+  // マップバッジを一時変更（badgeTimer で元に戻る）
+  clearTimeout(badgeTimer);
+  const badge = document.getElementById('map-badge');
+  if (badge) {
+    badge.textContent = 'AREA PETSの足あとを発見!';
+    badgeTimer = setTimeout(() => { badge.textContent = 'エリア探索中...'; }, 3000);
+  }
+
+  showToast('AREA PETSの足あとを見つけた', '+50 pt');
+  addPoints(50);
+  addKirokuRecord({
+    name:     'AREA PETSの足あと',
+    pts:      50,
+    dotClass: 'areapets',
+    meta:     '見えない気配の記録',
+  });
+
+  // KAKUBAKE リアクション
+  const react = AREAPETS_DISCOVER_REACTS[
+    Math.floor(Math.random() * AREAPETS_DISCOVER_REACTS.length)
+  ];
+  showCompanionReact(react);
+
+  // 即座に発見状態を保存（ページリロードで再発生しない）
+  try { localStorage.setItem(STORAGE_EVENT, 'found'); } catch(e) {}
+  saveState();
 }
 
 // ===========================
@@ -682,7 +724,7 @@ function addKirokuRecord(item) {
     '<div class="record-icon-dot' + (item.dotClass ? ' ' + item.dotClass : '') + '"></div>' +
     '<div class="record-body">' +
       '<p class="record-name">' + item.name + '</p>' +
-      '<p class="record-meta">記憶のかけら</p>' +
+      '<p class="record-meta">' + (item.meta || '記憶のかけら') + '</p>' +
     '</div>' +
     '<span class="record-pts">+' + item.pts + ' pt</span>';
   list.appendChild(card);
@@ -723,6 +765,8 @@ function loadState() {
     }
     const steps = localStorage.getItem(STORAGE_STEPS);
     if (steps !== null) currentSteps = JSON.parse(steps);
+    const evt = localStorage.getItem(STORAGE_EVENT);
+    if (evt === 'found') eventFound = true;
   } catch(e) {}
 }
 
@@ -868,9 +912,10 @@ document.addEventListener('DOMContentLoaded', () => {
     _fogResizeTimer = setTimeout(renderFogCanvas, 150);
   });
 
-  // 4. 発見済みならモチーフに found クラスを適用
+  // 4. 発見済みならビジュアルを復元
   if (motifState  === 'found' && motifEl)  motifEl.classList.add('found');
   if (motif2State === 'found' && motif2El) motif2El.classList.add('found');
+  if (eventFound  && eventSpotEl)          eventSpotEl.classList.add('found');
 
   // 5. D-pad バインド
   bindDpad();
@@ -946,7 +991,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.dev-reset').forEach(btn => {
     btn.addEventListener('click', () => {
       [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
-       STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS].forEach(k => {
+       STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS,
+       STORAGE_EVENT].forEach(k => {
         try { localStorage.removeItem(k); } catch(e) {}
       });
       location.reload();
