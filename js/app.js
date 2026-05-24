@@ -461,17 +461,26 @@ function checkEventSpot() {
 // ===========================
 // 木場公園スポット (Step 20)
 // ===========================
-// スポット座標は object-fit:fill の背景画像に対して調整済み (Step 21.7)
-// 北園: x≈11-63, y≈3-43 / 南園: x≈11-63, y≈50-94 / 仙台堀川: y≈43-50
+// スポット座標: kiba-park-bg.png の画像レイアウトに合わせて調整済み (Step 21.8)
+// 画像内の主要ランドマーク概略 (0-100座標系)
+//   MOT美術館:    x=12-26, y=4-14  (北園左上の大きな灰色建物)
+//   テニスコート:  x=8-22,  y=24-35 (北園左側)
+//   北園中央広場:  x=36-44, y=27-34 (円形路・パス)
+//   冒険広場:     x=46-54, y=29-36 (北園右寄り)
+//   仙台堀川:     y=43-50  (水平に走る運河)
+//   南園:         x=6-62,  y=50-94
 const PARK_SPOTS = [
-  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 24, y: 22, type: 'mot',     nearR: 8  },
-  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 17, y: 20, type: 'mot',     nearR: 8  },
-  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 40, y: 14, type: 'mot',     nearR: 8  },
-  { id: 'hakken',      name: '発見の塔',        x: 44, y: 26, type: 'magical', nearR: 9  },
-  { id: 'kagayaki',    name: '輝きの塔',        x: 46, y: 30, type: 'magical', nearR: 9  },
-  { id: 'kita-bouken', name: '北の冒険広場',    x: 42, y: 34, type: 'area',    nearR: 10 },
-  { id: 'tenshi',      name: '天使のリング',    x: 28, y: 33, type: 'magical', nearR: 8  },
-  { id: 'toilet-6',    name: '6号トイレ',       x: 20, y: 30, type: 'real',    nearR: 7  },
+  // MOT (東京都現代美術館) エリア ─ 建物の南側・庭園周辺
+  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 14, y: 15, type: 'mot',     nearR: 8  },
+  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 21, y: 18, type: 'mot',     nearR: 8  },
+  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 27, y: 10, type: 'mot',     nearR: 8  },
+  // 北園 中央〜右側のスポット
+  { id: 'hakken',      name: '発見の塔',        x: 42, y: 23, type: 'magical', nearR: 9  },
+  { id: 'tenshi',      name: '天使のリング',    x: 36, y: 31, type: 'magical', nearR: 8  },
+  { id: 'kagayaki',    name: '輝きの塔',        x: 47, y: 29, type: 'magical', nearR: 9  },
+  { id: 'kita-bouken', name: '北の冒険広場',    x: 51, y: 33, type: 'area',    nearR: 10 },
+  // 北園 西側・テニスコート沿い
+  { id: 'toilet-6',    name: '6号トイレ',       x: 16, y: 31, type: 'real',    nearR: 7  },
 ];
 
 // 暗い fog に合わせて base を最小限に (Step 21.7)
