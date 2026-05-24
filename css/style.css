@@ -111,7 +111,7 @@ html, body {
 .main {
   flex: 1;
   min-height: 0;
-  padding: 10px 14px;
+  padding: 6px 8px;
   overflow: hidden;
 }
 
@@ -131,10 +131,13 @@ html, body {
    =========================== */
 .point-card {
   flex-shrink: 0;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.50);
   border-radius: var(--r-md);
   padding: 10px 16px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
   display: flex;
   align-items: center;
 }
@@ -246,34 +249,40 @@ html, body {
 }
 
 .gps-btn {
-  background: none;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.50);
+  color: var(--text);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
 }
 
 .gps-btn:active {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(0.96);
 }
 
 .gps-status {
   font-size: 10px;
-  color: var(--text-muted);
+  color: rgba(210, 235, 255, 0.92);
   white-space: pre-wrap;
   line-height: 1.6;
   min-width: 0;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 
 /* 公園内歓迎テキスト */
 .gps-welcome {
-  color: var(--teal-dark);
-  font-weight: 600;
+  color: #81E6D9;
+  font-weight: 700;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.55);
 }
 
 /* ===========================
@@ -281,10 +290,13 @@ html, body {
    =========================== */
 .companion-card {
   flex-shrink: 0;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: var(--r-sm);
   padding: 8px 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -353,14 +365,18 @@ html, body {
 }
 
 /* ===========================
-   木場公園風 背景マップ
+   木場公園 背景画像 (Step 21)
    =========================== */
-.park-map {
+.park-bg-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  /* fill: field座標 0-100 = 画像の端から端に1:1対応する。
+     実際に貼り替える画像は「公園端 = 画像端」になるようトリミングすること。 */
+  object-fit: fill;
   pointer-events: none;
+  z-index: 0;
 }
 
 /* ===========================
@@ -385,35 +401,39 @@ html, body {
   pointer-events: none;
 }
 
+/* 現在地周囲の灯り — screen 合成でフォグを温かく抜く */
 .z1 {
-  width: 220px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(77,184,175,0.28) 0%, transparent 70%);
+  width: 310px;
+  height: 290px;
+  background: radial-gradient(circle, rgba(255, 248, 210, 0.32) 0%, transparent 65%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  filter: blur(28px);
+  filter: blur(38px);
+  mix-blend-mode: screen;
   transition: top 0.18s ease-out, left 0.18s ease-out;
 }
 
 .z2 {
-  width: 130px;
-  height: 110px;
-  background: radial-gradient(circle, rgba(77,184,175,0.18) 0%, transparent 70%);
+  width: 180px;
+  height: 160px;
+  background: radial-gradient(circle, rgba(255, 248, 210, 0.18) 0%, transparent 70%);
   top: 28%;
   left: 32%;
   transform: translate(-50%, -50%);
-  filter: blur(22px);
+  filter: blur(28px);
+  mix-blend-mode: screen;
 }
 
 .z3 {
-  width: 100px;
-  height: 90px;
-  background: radial-gradient(circle, rgba(129,218,210,0.14) 0%, transparent 70%);
+  width: 140px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 248, 210, 0.14) 0%, transparent 70%);
   top: 68%;
   left: 66%;
   transform: translate(-50%, -50%);
-  filter: blur(18px);
+  filter: blur(22px);
+  mix-blend-mode: screen;
 }
 
 /* グリッドオーバーレイ */
@@ -476,11 +496,9 @@ html, body {
     0 0 16px rgba(77, 184, 175, 0.7);
 }
 
-/* マップステータスバッジ */
+/* マップステータスバッジ (Step 21.6: top-ui フロー内) */
 .map-badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
+  align-self: flex-start;
   background: rgba(17, 24, 39, 0.78);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -492,7 +510,30 @@ html, body {
   border-radius: 30px;
   border: 1px solid rgba(77, 184, 175, 0.25);
   white-space: nowrap;
-  z-index: 5;
+}
+
+/* ===========================
+   地図オーバーレイ コンテナ (Step 21.6)
+   =========================== */
+.map-overlay {
+  position: absolute;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* 上部UIオーバーレイ（ポイント・GPS・KAKUBAKE） */
+.map-overlay.top-ui {
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 上部UI内の要素はタップ可能にする */
+.map-overlay.top-ui > * {
+  pointer-events: auto;
 }
 
 /* ===========================
@@ -676,12 +717,13 @@ html, body {
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  /* 中心は柔らかく — 輝点ではなく染み込むような光 */
+  /* screen 合成で暗いフォグを温かい光で明るく抜く */
   background: radial-gradient(circle,
-    rgba(77, 184, 175, 0.7)  0%,
-    rgba(77, 184, 175, 0.2)  45%,
-    transparent              100%
+    rgba(255, 248, 222, 0.92)  0%,
+    rgba(240, 225, 185, 0.48)  40%,
+    transparent                100%
   );
+  mix-blend-mode: screen;
   transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
 }
 
@@ -1050,8 +1092,8 @@ html, body {
 #park-fog {
   position: absolute;
   inset: 0;
-  background: #111827;
-  opacity: 0.88;
+  background: #080c14;
+  opacity: 0.96;        /* 初期ほぼ真っ黒。歩くほど JS が下げる */
   pointer-events: none;
   transition: opacity 1.8s ease;
 }
@@ -1076,16 +1118,16 @@ html, body {
   width: 10px;
   height: 10px;
   background: radial-gradient(circle,
-    rgba(210, 190, 255, 0.95) 0%,
-    rgba(180, 150, 255, 0.25) 55%,
+    rgba(210, 190, 255, 0.80) 0%,
+    rgba(180, 150, 255, 0.16) 55%,
     transparent               100%
   );
-  animation: spot-magical-breathe 3.8s ease-in-out infinite;
+  animation: spot-magical-breathe 4.2s ease-in-out infinite;
 }
 
 @keyframes spot-magical-breathe {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(200, 170, 255, 0.55); }
-  50%      { box-shadow: 0 0 0 8px rgba(200, 170, 255, 0);    }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(200, 170, 255, 0.30); }
+  50%      { box-shadow: 0 0 0 5px rgba(200, 170, 255, 0);    }
 }
 
 /* MOT区画スポット */
@@ -1093,8 +1135,8 @@ html, body {
   width: 8px;
   height: 8px;
   background: radial-gradient(circle,
-    rgba(220, 225, 248, 0.92) 0%,
-    rgba(180, 190, 230, 0.22) 55%,
+    rgba(215, 220, 245, 0.75) 0%,
+    rgba(175, 185, 225, 0.12) 55%,
     transparent               100%
   );
 }
@@ -1104,16 +1146,16 @@ html, body {
   width: 9px;
   height: 9px;
   background: radial-gradient(circle,
-    rgba(140, 215, 175, 0.92) 0%,
-    rgba(100, 195, 150, 0.22) 55%,
+    rgba(135, 210, 168, 0.78) 0%,
+    rgba(100, 190, 145, 0.13) 55%,
     transparent               100%
   );
-  animation: spot-area-breathe 4.5s ease-in-out infinite;
+  animation: spot-area-breathe 5s ease-in-out infinite;
 }
 
 @keyframes spot-area-breathe {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(130, 210, 160, 0.48); }
-  55%      { box-shadow: 0 0 0 5px rgba(130, 210, 160, 0);    }
+  0%, 100% { box-shadow: 0 0 0 0   rgba(130, 210, 160, 0.25); }
+  55%      { box-shadow: 0 0 0 3px rgba(130, 210, 160, 0);    }
 }
 
 /* 現実スポット（6号トイレ）— 小さく控えめ */
@@ -1130,18 +1172,18 @@ html, body {
 /* スポットラベル（近づいたときだけ表示） */
 .park-spot-label {
   position: absolute;
-  top: 14px;
+  top: 15px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
-  color: rgba(240, 245, 255, 0.86);
-  letter-spacing: 0.3px;
+  color: rgba(235, 242, 255, 0.90);
+  letter-spacing: 0.2px;
   white-space: nowrap;
-  background: rgba(12, 18, 38, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 16, 34, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 10px;
-  padding: 2px 7px;
+  padding: 3px 8px;
   opacity: 0;
   transition: opacity 0.45s ease;
   pointer-events: none;
@@ -1149,15 +1191,16 @@ html, body {
 
 /* 不思議スポットのラベルは淡いパープル系 */
 .park-spot.magical .park-spot-label {
-  border-color: rgba(200, 170, 255, 0.14);
-  color: rgba(225, 215, 255, 0.90);
+  border-color: rgba(195, 165, 255, 0.18);
+  color: rgba(222, 212, 255, 0.92);
 }
 
-/* 現実スポットのラベルは控えめ */
+/* 現実スポットのラベルは控えめ — 実用的な雰囲気 */
 .park-spot.real .park-spot-label {
-  font-size: 8px;
-  color: rgba(200, 210, 225, 0.68);
-  background: rgba(12, 18, 38, 0.50);
+  font-size: 9px;
+  color: rgba(195, 208, 225, 0.72);
+  background: rgba(10, 16, 34, 0.58);
+  border-color: rgba(255, 255, 255, 0.06);
 }
 
 /* 近づいたとき — スポット自体も即座に明るく、ラベル表示 */
@@ -1167,4 +1210,40 @@ html, body {
 
 .park-spot.near .park-spot-label {
   opacity: 1;
+}
+
+/* ===========================
+   MAP ステータスパネル (Step 20.8)
+   =========================== */
+.map-status {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+
+.map-status-row {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 9px;
+  line-height: 1.4;
+  color: rgba(190, 210, 240, 0.80);
+  background: rgba(8, 12, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 5px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+
+/* 近くのスポットがいないときは行ごと非表示 */
+#status-nearby:empty {
+  display: none;
+}
+
+/* 公園内判定 OK のときはティール色 */
+#status-park.in-park {
+  color: rgba(80, 220, 200, 0.90);
 }

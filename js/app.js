@@ -223,8 +223,11 @@ function movePin(dx, dy) {
   renderPin();
   saveCells();
   savePos();
-  if (memResult === 'new')     { addPoints(2); addSteps(12); }
-  if (memResult === 'levelup') { addPoints(1); addSteps(6); }
+  // 歩数: 移動したら必ず +1、新セル/levelup でさらに +1 (Step 21.7)
+  let stepDelta = 1;
+  if (memResult === 'new')     { addPoints(2); stepDelta++; }
+  if (memResult === 'levelup') { addPoints(1); stepDelta++; }
+  addSteps(stepDelta);
   flashBadge('移動中...');  // checkMotif* が近傍なら上書きする
   checkMotif();
   checkMotif2();
@@ -232,6 +235,7 @@ function movePin(dx, dy) {
   tickCompanion();
   checkSpotProximity();
   updateMapBrightness();
+  updateMapStatus();
 }
 
 // ===========================
@@ -241,12 +245,13 @@ const MAX_MEMORY  = 80;
 const MAX_LEVEL   = 5;
 const CELL_RADIUS = 3;  // STEP=3 に合わせて縮小（1〜2歩ごとに新セル）
 
+// screen 合成で暗い fog を温かく抜くため、サイズ・不透明度を大きめに設定 (Step 21.7)
 const CELL_CONFIG = [
-  { size: 8,  opacity: 0.13 },
-  { size: 11, opacity: 0.22 },
-  { size: 14, opacity: 0.33 },
-  { size: 17, opacity: 0.44 },
-  { size: 21, opacity: 0.54 },
+  { size: 44,  opacity: 0.55 },
+  { size: 58,  opacity: 0.64 },
+  { size: 72,  opacity: 0.70 },
+  { size: 84,  opacity: 0.75 },
+  { size: 96,  opacity: 0.80 },
 ];
 
 let memoryCells = [];
@@ -456,22 +461,26 @@ function checkEventSpot() {
 // ===========================
 // 木場公園スポット (Step 20)
 // ===========================
+// スポット座標は object-fit:fill の背景画像に対して調整済み (Step 21.7)
+// 北園: x≈11-63, y≈3-43 / 南園: x≈11-63, y≈50-94 / 仙台堀川: y≈43-50
 const PARK_SPOTS = [
-  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 25, y: 11, type: 'mot',     nearR: 8  },
-  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 16, y: 19, type: 'mot',     nearR: 8  },
-  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 33, y: 16, type: 'mot',     nearR: 8  },
-  { id: 'hakken',      name: '発見の塔',        x: 36, y: 22, type: 'magical', nearR: 9  },
-  { id: 'kagayaki',    name: '輝きの塔',        x: 38, y: 27, type: 'magical', nearR: 9  },
-  { id: 'kita-bouken', name: '北の冒険広場',    x: 43, y: 30, type: 'area',    nearR: 10 },
-  { id: 'tenshi',      name: '天使のリング',    x: 27, y: 33, type: 'magical', nearR: 8  },
-  { id: 'toilet-6',    name: '6号トイレ',       x: 21, y: 27, type: 'real',    nearR: 7  },
+  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 24, y: 22, type: 'mot',     nearR: 8  },
+  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 17, y: 20, type: 'mot',     nearR: 8  },
+  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 40, y: 14, type: 'mot',     nearR: 8  },
+  { id: 'hakken',      name: '発見の塔',        x: 44, y: 26, type: 'magical', nearR: 9  },
+  { id: 'kagayaki',    name: '輝きの塔',        x: 46, y: 30, type: 'magical', nearR: 9  },
+  { id: 'kita-bouken', name: '北の冒険広場',    x: 42, y: 34, type: 'area',    nearR: 10 },
+  { id: 'tenshi',      name: '天使のリング',    x: 28, y: 33, type: 'magical', nearR: 8  },
+  { id: 'toilet-6',    name: '6号トイレ',       x: 20, y: 30, type: 'real',    nearR: 7  },
 ];
 
+// 暗い fog に合わせて base を最小限に (Step 21.7)
+// 近づいた時だけ発見できる演出に
 const SPOT_OPACITY_CFG = {
-  magical: { base: 0.02, max: 0.50 },
-  mot:     { base: 0.04, max: 0.58 },
-  area:    { base: 0.04, max: 0.52 },
-  real:    { base: 0.06, max: 0.38 },
+  magical: { base: 0.01, max: 0.42 },
+  mot:     { base: 0.02, max: 0.46 },
+  area:    { base: 0.01, max: 0.42 },
+  real:    { base: 0.02, max: 0.26 },
 };
 
 let spotNodes = {};  // id → { el, isNear }
@@ -483,8 +492,10 @@ function calcSpotOpacity(type, cellCount) {
 }
 
 function calcFogOpacity(cellCount) {
-  const t = Math.min(cellCount / 60, 1);
-  return +(0.88 - 0.72 * t).toFixed(3);  // 0.88 → 0.16
+  // 初期ほぼ真っ黒 → 80セル歩いて 0.64 程度まで下がる
+  // 暗さを保ちつつ、歩いた足跡（screen合成セル）が浮かびあがる仕組み
+  const t = Math.min(cellCount / 80, 1);
+  return +(0.96 - 0.32 * t).toFixed(3);  // 0.96 → 0.64
 }
 
 function updateMapBrightness() {
@@ -519,6 +530,36 @@ function initSpots() {
     map.insertBefore(el, z1);
     spotNodes[spot.id] = { el, isNear: false };
   });
+}
+
+// フィールド座標範囲による公園内判定（デモ移動用）
+// SVG 外周 rect（北 x=6..65 y=6..44、南 x=6..65 y=52..93）に対応
+function isInsideFieldPark(x, y) {
+  return (x >= 6 && x <= 65 && y >= 6  && y <= 44) ||   // 北園
+         (x >= 6 && x <= 65 && y >= 52 && y <= 93);      // 南園
+}
+
+// MAP ステータスパネルを更新する
+// gpsInPark: GPS ボタン経由のとき boolean を渡す; それ以外は undefined → field 座標で判定
+function updateMapStatus(gpsInPark) {
+  const coordEl  = document.getElementById('status-coords');
+  const nearbyEl = document.getElementById('status-nearby');
+  const parkEl   = document.getElementById('status-park');
+  if (!coordEl || !nearbyEl || !parkEl) return;
+
+  // 座標
+  coordEl.textContent = `MAP  x=${pos.x.toFixed(1)}  y=${pos.y.toFixed(1)}`;
+
+  // 近くのスポット（isNear が true のもの）
+  const nearNames = PARK_SPOTS
+    .filter(s => spotNodes[s.id]?.isNear)
+    .map(s => s.name);
+  nearbyEl.textContent = nearNames.length ? '近: ' + nearNames.join(' / ') : '';
+
+  // 公園内判定
+  const inside = gpsInPark !== undefined ? gpsInPark : isInsideFieldPark(pos.x, pos.y);
+  parkEl.textContent = `公園内判定: ${inside ? 'OK' : '外'}`;
+  parkEl.classList.toggle('in-park', !!inside);
 }
 
 function checkSpotProximity() {
@@ -743,6 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const parkFog = document.getElementById('park-fog');
   if (parkFog) parkFog.setAttribute('data-instant', '');
   updateMapBrightness();
+  updateMapStatus();
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.getElementById('park-fog')?.removeAttribute('data-instant');
@@ -766,12 +808,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = document.getElementById('gps-status');
     if (!status) return;
 
-    if (!navigator.geolocation) {
-      status.textContent = '位置情報API非対応';
+    // HTTPS チェック（localhost は開発用として許可）
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      status.textContent = 'GPSはHTTPS環境で確認してください';
       return;
     }
 
-    status.textContent = '取得中...';
+    if (!navigator.geolocation) {
+      status.textContent = 'このブラウザは位置情報に対応していません';
+      return;
+    }
+
+    status.textContent = 'GPS確認中...';
 
     navigator.geolocation.getCurrentPosition(
       gpsPos => {
@@ -785,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pos.y = fld.y;
         renderPin();
         savePos();
+        updateMapStatus(inside);
 
         // 公園内なら記憶セルを1回刻む
         let memLine = '';
@@ -808,8 +857,13 @@ document.addEventListener('DOMContentLoaded', () => {
           `MAP: x=${fld.x.toFixed(1)}, y=${fld.y.toFixed(1)}` +
           memLine;
       },
-      _err => {
-        status.textContent = '位置情報を取得できませんでした';
+      err => {
+        const MSG = {
+          1: '位置情報が許可されていません',       // PERMISSION_DENIED
+          2: '現在地を取得できませんでした',        // POSITION_UNAVAILABLE
+          3: 'GPS取得がタイムアウトしました',       // TIMEOUT
+        };
+        status.textContent = MSG[err.code] ?? 'GPS確認に失敗しました';
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
