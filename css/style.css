@@ -1302,3 +1302,182 @@ html, body {
   background: rgba(77, 184, 175, 0.35);
   transform: scale(0.88);
 }
+
+/* ===========================
+   AREA PETS 発見カード (Step 22.6)
+   発見時に map-area 中央に浮かび、数秒で消える半透明カード
+   =========================== */
+.event-card {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  width: min(228px, calc(100% - 44px));
+  background: rgba(8, 12, 22, 0.84);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 235, 175, 0.16);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+  pointer-events: none;
+  opacity: 0;
+  animation: event-card-in 0.45s ease-out 0.20s forwards;
+}
+
+/* フェードアウト（.hiding クラスを付けてから削除） */
+.event-card.hiding {
+  animation: event-card-out 0.40s ease-in forwards;
+}
+
+.event-card-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.0px;
+  color: rgba(255, 235, 165, 0.78);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.event-card-desc {
+  font-size: 12px;
+  line-height: 1.70;
+  color: rgba(255, 255, 255, 0.80);
+  margin: 0 0 10px;
+}
+
+.event-card-divider {
+  height: 1px;
+  background: rgba(255, 235, 175, 0.10);
+  margin-bottom: 9px;
+}
+
+.event-card-react {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.event-card-react-who {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: rgba(255, 235, 165, 0.50);
+  flex-shrink: 0;
+}
+
+.event-card-react-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  font-style: italic;
+}
+
+@keyframes event-card-in {
+  0%   { opacity: 0; transform: translate(-50%, calc(-50% + 10px)); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+@keyframes event-card-out {
+  0%   { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% - 6px)); }
+}
+
+/* ===========================
+   Step 22.6: AREA PETS 足あとマーク（CSS描画・絵文字なし）
+   fog-canvas より DOM が後ろ → 霧の上に常時表示される
+   コンテナ内に .footprint-step を3つ配置し、斜めの歩行跡を表現
+   =========================== */
+.areapets-footprint {
+  position: absolute;
+  width: 38px;
+  height: 56px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 1歩ぶんの足あと
+   element 本体 = メイン肉球（楕円）
+   ::before     = 中央の指先
+   ::before の box-shadow = 左右の指先
+   合計 肉球 1 + 指先 3 = 足型 */
+.footprint-step {
+  position: absolute;
+  width: 9px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.50);
+  box-shadow: 0 0 5px 1px rgba(255, 215, 125, 0.22);
+  opacity: 0;
+}
+
+.footprint-step::before {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.45);
+  top: -7px;
+  left: 2px;
+  /* 左右の指先を box-shadow で複製 */
+  box-shadow:
+    -5px 3px 0 0 rgba(255, 235, 175, 0.45),
+     5px 3px 0 0 rgba(255, 235, 175, 0.45);
+}
+
+/* 3歩分の絶対位置（左下 → 右中 → 左上：交互の歩行跡） */
+.footprint-step:nth-child(1) {
+  left: 2px;
+  top: 38px;
+  animation: step-appear 0.50s ease-out 0.00s forwards;
+}
+.footprint-step:nth-child(2) {
+  left: 20px;
+  top: 20px;
+  animation: step-appear 0.50s ease-out 0.22s forwards;
+}
+.footprint-step:nth-child(3) {
+  left: 4px;
+  top: 2px;
+  animation: step-appear 0.50s ease-out 0.44s forwards;
+}
+
+/* リロード復元時はアニメなし・即時表示 */
+.areapets-footprint.no-anim .footprint-step {
+  animation: none;
+  opacity: 1;
+}
+
+@keyframes step-appear {
+  0%   { opacity: 0; transform: translateY(4px)  scale(0.45); }
+  65%  { opacity: 1; transform: translateY(-1px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0)    scale(1.00); }
+}
+
+/* ===========================
+   Step 22: AREA PETS 足あと ─ 記録アイコン
+   =========================== */
+.record-icon-dot.areapets {
+  background: radial-gradient(circle,
+    rgba(255, 205, 80, 0.65)  0%,
+    rgba(255, 165, 40, 0.18) 60%,
+    transparent               100%
+  );
+  border: 1.5px solid rgba(255, 200, 70, 0.38);
+}
+
+/* ===========================
+   Step 22: AREA PETS イベント地点 ─ 発見済み状態
+   =========================== */
+.event-spot.found {
+  opacity: 0.30;
+  width: 14px;
+  height: 14px;
+  animation: none;
+  background: radial-gradient(circle,
+    rgba(255, 210, 100, 0.72) 0%,
+    rgba(255, 175, 50, 0.16)  55%,
+    transparent               100%
+  );
+  transition: opacity 0.8s ease, width 0.8s ease, height 0.8s ease;
+}

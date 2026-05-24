@@ -321,11 +321,12 @@ let eventSpotState = 'hidden';  // 'hidden' | 'near' | 'close' | 'found'
 let eventFound     = false;     // Step 22: true になると再発生しない
 let kirokuRecords  = [];        // 保存・復元に使う記録の配列
 
-// AREA PETS 発見時の KAKUBAKE リアクション (Step 22)
+// AREA PETS 発見時の KAKUBAKE リアクション (Step 22.6)
 const AREAPETS_DISCOVER_REACTS = [
-  'なにかいたみたい',
-  '足あと、みつけた',
-  'そばにいるね',
+  'いま、なにか通ったね',
+  '足あと、のこってる',
+  'まだ近くにいるかも',
+  'そっと見つけたね',
 ];
 
 function initMotif() {
@@ -486,18 +487,71 @@ function discoverAreaPets() {
     name:     'AREA PETSの足あと',
     pts:      50,
     dotClass: 'areapets',
-    meta:     '見えない気配の記録',
+    meta:     '見えない小さな気配が、地図に足あとを残した',
   });
 
-  // KAKUBAKE リアクション
+  // 発見カードを表示（説明 + KAKUBAKE の一言）
   const react = AREAPETS_DISCOVER_REACTS[
     Math.floor(Math.random() * AREAPETS_DISCOVER_REACTS.length)
   ];
-  showCompanionReact(react);
+  showEventCard(react);
+
+  // 地図上に足あとマークを配置
+  placeFootprint(true);
 
   // 即座に発見状態を保存（ページリロードで再発生しない）
   try { localStorage.setItem(STORAGE_EVENT, 'found'); } catch(e) {}
   saveState();
+}
+
+// AREA PETS 発見カード（説明 + KAKUBAKE の一言を一枚のカードで表示）
+let _eventCardTimer = null;
+
+function showEventCard(react) {
+  // 既存カードがあれば即除去
+  const prev = document.getElementById('event-card');
+  if (prev) prev.remove();
+  clearTimeout(_eventCardTimer);
+
+  const mapArea = document.getElementById('map-area');
+  if (!mapArea) return;
+
+  const card = document.createElement('div');
+  card.id        = 'event-card';
+  card.className = 'event-card';
+  card.innerHTML =
+    '<div class="event-card-label">AREA PETSの足あと</div>' +
+    '<p class="event-card-desc">見えない小さな気配が<br>ここを通った跡がある</p>' +
+    '<div class="event-card-divider"></div>' +
+    '<div class="event-card-react">' +
+      '<span class="event-card-react-who">KAKUBAKE</span>' +
+      '<span class="event-card-react-text">「' + react + '」</span>' +
+    '</div>';
+  mapArea.appendChild(card);
+
+  // 4.5秒後にフェードアウトして削除
+  _eventCardTimer = setTimeout(() => {
+    card.classList.add('hiding');
+    setTimeout(() => card.remove(), 420);
+  }, 4500);
+}
+
+// 地図上に CSS描画の足あとを配置（animate=true で出現アニメあり）
+function placeFootprint(animate) {
+  const map = document.getElementById('field-world');
+  if (!map) return;
+  const pin = map.querySelector('.location-pin');
+  const el  = document.createElement('div');
+  el.className  = 'areapets-footprint' + (animate ? '' : ' no-anim');
+  el.style.left = EVENT_POS.x + '%';
+  el.style.top  = EVENT_POS.y + '%';
+  // 3歩ぶんの足あとステップ（CSS で肉球＋指先を描画）
+  for (let i = 0; i < 3; i++) {
+    const step = document.createElement('div');
+    step.className = 'footprint-step';
+    el.appendChild(step);
+  }
+  map.insertBefore(el, pin);  // fog-canvas より後 → 霧の上に常時表示
 }
 
 // ===========================
@@ -915,7 +969,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4. 発見済みならビジュアルを復元
   if (motifState  === 'found' && motifEl)  motifEl.classList.add('found');
   if (motif2State === 'found' && motif2El) motif2El.classList.add('found');
-  if (eventFound  && eventSpotEl)          eventSpotEl.classList.add('found');
+  if (eventFound  && eventSpotEl) {
+    eventSpotEl.classList.add('found');
+    placeFootprint(false);  // リロード後はアニメなしで復元
+  }
 
   // 5. D-pad バインド
   bindDpad();
