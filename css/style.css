@@ -401,39 +401,36 @@ html, body {
   pointer-events: none;
 }
 
-/* 現在地周囲の灯り — screen 合成でフォグを温かく抜く */
+/* 現在地周囲の柔らかいオーラ — canvas 穴の上に重なる淡い光 (Step 21.7b) */
 .z1 {
-  width: 310px;
-  height: 290px;
-  background: radial-gradient(circle, rgba(255, 248, 210, 0.32) 0%, transparent 65%);
+  width: 240px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255, 248, 200, 0.18) 0%, transparent 65%);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  filter: blur(38px);
-  mix-blend-mode: screen;
+  filter: blur(22px);
   transition: top 0.18s ease-out, left 0.18s ease-out;
 }
 
 .z2 {
-  width: 180px;
-  height: 160px;
-  background: radial-gradient(circle, rgba(255, 248, 210, 0.18) 0%, transparent 70%);
+  width: 140px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 245, 195, 0.10) 0%, transparent 70%);
   top: 28%;
   left: 32%;
   transform: translate(-50%, -50%);
-  filter: blur(28px);
-  mix-blend-mode: screen;
+  filter: blur(16px);
 }
 
 .z3 {
-  width: 140px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(255, 248, 210, 0.14) 0%, transparent 70%);
+  width: 110px;
+  height: 96px;
+  background: radial-gradient(circle, rgba(255, 245, 195, 0.08) 0%, transparent 70%);
   top: 68%;
   left: 66%;
   transform: translate(-50%, -50%);
-  filter: blur(22px);
-  mix-blend-mode: screen;
+  filter: blur(14px);
 }
 
 /* グリッドオーバーレイ */
@@ -717,13 +714,12 @@ html, body {
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  /* screen 合成で暗いフォグを温かい光で明るく抜く */
+  /* canvas の穴越しに見える背景の上に乗る控えめな足跡グロー (Step 21.7b) */
   background: radial-gradient(circle,
-    rgba(255, 248, 222, 0.92)  0%,
-    rgba(240, 225, 185, 0.48)  40%,
+    rgba(255, 235, 160, 0.28)  0%,
+    rgba(255, 215, 120, 0.09)  45%,
     transparent                100%
   );
-  mix-blend-mode: screen;
   transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
 }
 
@@ -1087,19 +1083,16 @@ html, body {
 }
 
 /* ===========================
-   地図明暗フォグ (Step 20)
+   Canvas 霧レイヤー (Step 21.7b)
+   歩いた場所に "destination-out" で穴を開け、背景画像を可視化する
    =========================== */
-#park-fog {
+#fog-canvas {
   position: absolute;
   inset: 0;
-  background: #080c14;
-  opacity: 0.96;        /* 初期ほぼ真っ黒。歩くほど JS が下げる */
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  transition: opacity 1.8s ease;
-}
-
-#park-fog[data-instant] {
-  transition: none;
+  /* DOM 順序: 背景画像の直上、スポット・z1・ピンの下 */
 }
 
 /* ===========================
@@ -1246,4 +1239,66 @@ html, body {
 /* 公園内判定 OK のときはティール色 */
 #status-park.in-park {
   color: rgba(80, 220, 200, 0.90);
+}
+
+/* ===========================
+   Step 21.7c: さんぽ画面ではヘッダーを非表示にしてマップを全画面化
+   =========================== */
+#app:has(#screen-sanpo.active) .header {
+  display: none;
+}
+
+/* ===========================
+   マップ内ヘッダー行 (Step 21.7c)
+   タイトル・AREAPETS・ステータスバッジ・リセットボタンを1行に収める
+   =========================== */
+.map-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* top-uiの flex-columnの中で横並びにするため width:100% を確保 */
+}
+
+.map-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.90);
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+/* ヘッダー行内の brand-badge は元と同じ見た目を維持 */
+.map-header-row .brand-badge {
+  font-size: 9px;
+  padding: 2px 7px;
+}
+
+/* ヘッダー行内の map-badge: 右端へ押し込み、小さめサイズ */
+.map-header-row .map-badge {
+  margin-left: auto;
+  align-self: center;
+  font-size: 10px;
+  padding: 4px 10px;
+}
+
+/* ヘッダー行内のリセットボタン（↺ アイコン形式、frosted glass） */
+.map-header-row .dev-reset {
+  background: rgba(17, 24, 39, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 14px;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.map-header-row .dev-reset:active {
+  background: rgba(77, 184, 175, 0.35);
+  transform: scale(0.88);
 }

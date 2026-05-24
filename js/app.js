@@ -6,13 +6,14 @@
 // ===========================
 // localStorage キー
 // ===========================
-const STORAGE_POINTS  = 'areapets_points';
-const STORAGE_MOTIF   = 'areapets_motif';
-const STORAGE_MOTIF2  = 'areapets_motif2';
-const STORAGE_RECORDS = 'areapets_records';
-const STORAGE_CELLS   = 'areapets_cells';
-const STORAGE_POS     = 'areapets_pos';
-const STORAGE_STEPS   = 'areapets_steps';
+const STORAGE_POINTS   = 'areapets_points';
+const STORAGE_MOTIF    = 'areapets_motif';
+const STORAGE_MOTIF2   = 'areapets_motif2';
+const STORAGE_RECORDS  = 'areapets_records';
+const STORAGE_CELLS    = 'areapets_cells';
+const STORAGE_POS      = 'areapets_pos';
+const STORAGE_STEPS    = 'areapets_steps';
+const STORAGE_REVEALED = 'areapets_revealed';  // Step 21.7c: グリッドリビール
 
 // ===========================
 // 木場公園 GPS 基準範囲（仮）
@@ -221,6 +222,7 @@ function movePin(dx, dy) {
   const memResult = stampMemory(pos.x, pos.y);
   addTrail(oldX, oldY);
   renderPin();
+  revealCurrentCell();  // Step 21.7c: 通過セルを記録
   saveCells();
   savePos();
   // 歩数: 移動したら必ず +1、新セル/levelup でさらに +1 (Step 21.7)
@@ -245,13 +247,13 @@ const MAX_MEMORY  = 80;
 const MAX_LEVEL   = 5;
 const CELL_RADIUS = 3;  // STEP=3 に合わせて縮小（1〜2歩ごとに新セル）
 
-// screen 合成で暗い fog を温かく抜くため、サイズ・不透明度を大きめに設定 (Step 21.7)
+// Canvas 穴あけ方式では DOM セルは控えめな足跡グロー (Step 21.7b)
 const CELL_CONFIG = [
-  { size: 44,  opacity: 0.55 },
-  { size: 58,  opacity: 0.64 },
-  { size: 72,  opacity: 0.70 },
-  { size: 84,  opacity: 0.75 },
-  { size: 96,  opacity: 0.80 },
+  { size: 32,  opacity: 0.34 },
+  { size: 42,  opacity: 0.40 },
+  { size: 50,  opacity: 0.45 },
+  { size: 58,  opacity: 0.49 },
+  { size: 66,  opacity: 0.53 },
 ];
 
 let memoryCells = [];
@@ -492,22 +494,130 @@ function calcSpotOpacity(type, cellCount) {
 }
 
 function calcFogOpacity(cellCount) {
-  // 初期ほぼ真っ黒 → 80セル歩いて 0.64 程度まで下がる
-  // 暗さを保ちつつ、歩いた足跡（screen合成セル）が浮かびあがる仕組み
+  // Step 21.7b: canvas 方式のため直接は使用しないが、将来のフォールバック用に維持
   const t = Math.min(cellCount / 80, 1);
-  return +(0.96 - 0.32 * t).toFixed(3);  // 0.96 → 0.64
+  return +(0.96 - 0.32 * t).toFixed(3);
 }
 
 function updateMapBrightness() {
   const cells = memoryCells.length;
-  const fog   = document.getElementById('park-fog');
-  if (fog) fog.style.opacity = calcFogOpacity(cells);
-
+  // fog は fog-canvas が担う (Step 21.7b) — DOM park-fog の opacity 操作は不要
   PARK_SPOTS.forEach(spot => {
     const data = spotNodes[spot.id];
     if (!data || data.isNear) return;
     data.el.style.opacity = calcSpotOpacity(spot.type, cells);
   });
+  renderFogCanvas();
+}
+
+// ===========================
+// Canvas 霧: 穴あけ方式 (Step 21.7b)
+// ===========================
+const CANVAS_HOLE_RADII = [55, 66, 76, 85, 95];  // level 1-5 (field-world px) — 後方互換で残す
+const CANVAS_POS_RADIUS = 72;                      // 現在地周囲の穴半径 — 後方互換で残す
+
+// ===========================
+// グリッドベースリビール (Step 21.7c)
+// ===========================
+const GRID_COLS = 14;
+const GRID_ROWS = 14;
+let revealedCells = new Set();  // 通過済みセルの Set。キーは 'col,row' 文字列
+
+// フィールド座標 (0-100) → グリッドセル { col, row, key }
+function posToGridCell(x, y) {
+  const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / 100 * GRID_COLS)));
+  const row = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / 100 * GRID_ROWS)));
+  return { col, row, key: `${col},${row}` };
+}
+
+// 現在地のグリッドセルを通過済みに追加して保存
+function revealCurrentCell() {
+  const { key } = posToGridCell(pos.x, pos.y);
+  if (!revealedCells.has(key)) {
+    revealedCells.add(key);
+    saveRevealedCells();
+  }
+}
+
+function saveRevealedCells() {
+  try {
+    localStorage.setItem(STORAGE_REVEALED, JSON.stringify([...revealedCells]));
+  } catch(e) {}
+}
+
+function loadRevealedCells() {
+  try {
+    const data = localStorage.getItem(STORAGE_REVEALED);
+    if (data !== null) JSON.parse(data).forEach(k => revealedCells.add(k));
+  } catch(e) {}
+}
+
+function cutFogHole(ctx, cx, cy, r, centerAlpha) {
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  grad.addColorStop(0,    `rgba(0,0,0,${centerAlpha.toFixed(2)})`);
+  grad.addColorStop(0.42, `rgba(0,0,0,${(centerAlpha * 0.72).toFixed(2)})`);
+  grad.addColorStop(0.74, `rgba(0,0,0,${(centerAlpha * 0.26).toFixed(2)})`);
+  grad.addColorStop(1,    'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function renderFogCanvas() {
+  const canvas = document.getElementById('fog-canvas');
+  if (!canvas) return;
+  const field  = document.getElementById('field-world');
+  if (!field)  return;
+
+  const w = field.offsetWidth;
+  const h = field.offsetHeight;
+  if (w === 0 || h === 0) return;
+
+  // キャンバスサイズを field-world の実ピクセルサイズに合わせる
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width  = w;
+    canvas.height = h;
+  }
+
+  const ctx   = canvas.getContext('2d');
+  const cellW = w / GRID_COLS;
+  const cellH = h / GRID_ROWS;
+  const margin = 2;  // グリッド線として残す余白（px）
+
+  // 1. 黒い霧で全体を塗りつぶす
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = 'rgba(8, 12, 20, 0.97)';
+  ctx.fillRect(0, 0, w, h);
+
+  // 2. 通過済みグリッドセルを透明にして背景画像を露出
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+  revealedCells.forEach(key => {
+    const [col, row] = key.split(',').map(Number);
+    ctx.fillRect(
+      col * cellW + margin,
+      row * cellH + margin,
+      cellW - margin * 2,
+      cellH - margin * 2
+    );
+  });
+
+  // 3. 現在地セルに暖かい光のグロー（露出した面に淡い温かみを添える）
+  ctx.globalCompositeOperation = 'source-over';
+  const { col: pc, row: pr } = posToGridCell(pos.x, pos.y);
+  const glowCx = (pc + 0.5) * cellW;
+  const glowCy = (pr + 0.5) * cellH;
+  const glowR  = Math.max(cellW, cellH) * 1.5;
+  const grad = ctx.createRadialGradient(glowCx, glowCy, 0, glowCx, glowCy, glowR);
+  grad.addColorStop(0,    'rgba(255, 235, 150, 0.20)');
+  grad.addColorStop(0.50, 'rgba(255, 220, 120, 0.07)');
+  grad.addColorStop(1,    'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(glowCx, glowCy, glowR, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function initSpots() {
@@ -654,6 +764,7 @@ function loadState() {
     const steps = localStorage.getItem(STORAGE_STEPS);
     if (steps !== null) currentSteps = JSON.parse(steps);
   } catch(e) {}
+  loadRevealedCells();  // Step 21.7c: グリッドリビール復元
 }
 
 // ===========================
@@ -775,25 +886,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. マップ初期化
   renderPin();
+  revealCurrentCell();  // Step 21.7c: 初期位置のセルを開放
   initMotif();
   initMotif2();
   initEventSpot();
   initSpots();
 
-  // Step 20: 保存済みセル数に応じた初期明暗をアニメーションなしで即反映
-  const parkFog = document.getElementById('park-fog');
-  if (parkFog) parkFog.setAttribute('data-instant', '');
-  updateMapBrightness();
+  // 初期スポット輝度などを即反映
+  updateMapBrightness();  // 内部で renderFogCanvas() も呼ばれる
   updateMapStatus();
+
+  // レイアウト確定後に fog-canvas を確実に描画（offsetWidth が 0 の場合のフォールバック）
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.getElementById('park-fog')?.removeAttribute('data-instant');
-    });
+    renderFogCanvas();
+    // フィールドのスクロールトランジションを有効化
+    document.getElementById('field-world')?.classList.add('field-ready');
   });
 
-  // 初期位置確定後、次フレームからフィールドのスクロールトランジションを有効化
-  requestAnimationFrame(() => {
-    document.getElementById('field-world')?.classList.add('field-ready');
+  // ウィンドウリサイズ時に fog-canvas を再描画 (Step 21.7b)
+  let _fogResizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(_fogResizeTimer);
+    _fogResizeTimer = setTimeout(renderFogCanvas, 150);
   });
 
   // 4. 発見済みならモチーフに found クラスを適用
@@ -843,6 +957,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (memResult === 'new')     addPoints(2);
           if (memResult === 'levelup') addPoints(1);
           addSteps(20);
+          revealCurrentCell();  // Step 21.7c: GPS位置のセルを開放
+          renderFogCanvas();    // GPS 確認後も霧を更新
           memLine = '\n現在地の記憶を刻みました';
         }
 
@@ -869,12 +985,15 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   });
 
-  // 7. 開発用リセットボタン
-  document.getElementById('dev-reset')?.addEventListener('click', () => {
-    [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
-     STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS].forEach(k => {
-      try { localStorage.removeItem(k); } catch(e) {}
+  // 7. 開発用リセットボタン（Step 21.7c: header内＋map内の両方に対応）
+  document.querySelectorAll('.dev-reset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
+       STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS,
+       STORAGE_REVEALED].forEach(k => {
+        try { localStorage.removeItem(k); } catch(e) {}
+      });
+      location.reload();
     });
-    location.reload();
   });
 });
