@@ -308,9 +308,9 @@ const MOTIF2_POS          = { x: 25, y: 75 };  // マップ左下エリア
 const MOTIF2_NEAR_RADIUS  = 16;
 const MOTIF2_TOUCH_RADIUS = 6.5;
 
-const EVENT_POS          = { x: 48, y: 60 };  // 公園南側エリア
-const EVENT_NEAR_RADIUS  = 22;
-const EVENT_CLOSE_RADIUS = 10;
+const EVENT_POS          = { x: 55, y: 66 };  // 南園中央の足あとが残りそうな園路
+const EVENT_NEAR_RADIUS  = 16;
+const EVENT_CLOSE_RADIUS = 6;
 const AREA_PETS_PLACE    = '南園の気配';
 const AREA_PETS_META     = '見えない小さな気配が、地図に足あとを残した';
 
@@ -322,6 +322,7 @@ let eventSpotEl    = null;
 let eventSpotState = 'hidden';  // 'hidden' | 'near' | 'close' | 'found'
 let eventFound     = false;     // Step 22: true になると再発生しない
 let kirokuRecords  = [];        // 保存・復元に使う記録の配列
+let lastTapPoint    = null;      // Step 31: 背景画像と0〜100座標の照合用
 
 // AREA PETS 発見時の KAKUBAKE リアクション (Step 22.6)
 const AREAPETS_DISCOVER_REACTS = [
@@ -588,26 +589,26 @@ function placeFootprint(animate) {
 // ===========================
 // 木場公園スポット (Step 20)
 // ===========================
-// スポット座標: kiba-park-bg.png の画像レイアウトに合わせて調整済み (Step 21.8)
+// スポット座標: kiba-park-bg.png の画像レイアウトに合わせて調整済み (Step 31)
 // 画像内の主要ランドマーク概略 (0-100座標系)
-//   MOT美術館:    x=12-26, y=4-14  (北園左上の大きな灰色建物)
-//   テニスコート:  x=8-22,  y=24-35 (北園左側)
-//   北園中央広場:  x=36-44, y=27-34 (円形路・パス)
-//   冒険広場:     x=46-54, y=29-36 (北園右寄り)
+//   MOT美術館:    x=32-60, y=3-13   (北園上部の大きな建物)
+//   テニスコート:  x=30-38, y=29-42  (北園左下)
+//   北園中央広場:  x=49-62, y=28-39  (円形路・芝生)
+//   冒険広場:     x=64-72, y=21-29  (北園右側の円形遊び場)
 //   仙台堀川:     y=43-50  (水平に走る運河)
-//   南園:         x=6-62,  y=50-94
+//   南園:         x=18-73, y=52-98
 const PARK_SPOTS = [
   // MOT (東京都現代美術館) エリア ─ 建物の南側・庭園周辺
-  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 14, y: 15, type: 'mot',     nearR: 8  },
-  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 21, y: 18, type: 'mot',     nearR: 8  },
-  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 27, y: 10, type: 'mot',     nearR: 8  },
+  { id: 'mot-iri',     name: 'MOT 自由の入口', x: 48, y: 10, type: 'mot',     nearR: 9,  focusR: 5.5 },
+  { id: 'mot-asobi',   name: 'MOT 自由の遊び', x: 40, y: 17, type: 'mot',     nearR: 9,  focusR: 5.5 },
+  { id: 'mot-taiyou',  name: 'MOT 太陽と石',   x: 51, y: 6,  type: 'mot',     nearR: 8,  focusR: 5   },
   // 北園 中央〜右側のスポット
-  { id: 'hakken',      name: '発見の塔',        x: 42, y: 23, type: 'magical', nearR: 9  },
-  { id: 'tenshi',      name: '天使のリング',    x: 36, y: 31, type: 'magical', nearR: 8  },
-  { id: 'kagayaki',    name: '輝きの塔',        x: 47, y: 29, type: 'magical', nearR: 9  },
-  { id: 'kita-bouken', name: '北の冒険広場',    x: 51, y: 33, type: 'area',    nearR: 10 },
+  { id: 'hakken',      name: '発見の塔',        x: 69, y: 24, type: 'magical', nearR: 9,  focusR: 5.5 },
+  { id: 'tenshi',      name: '天使のリング',    x: 56, y: 35, type: 'magical', nearR: 10, focusR: 6   },
+  { id: 'kagayaki',    name: '輝きの塔',        x: 49, y: 27, type: 'magical', nearR: 9,  focusR: 5.5 },
+  { id: 'kita-bouken', name: '北の冒険広場',    x: 66, y: 30, type: 'area',    nearR: 10, focusR: 6   },
   // 北園 西側・テニスコート沿い
-  { id: 'toilet-6',    name: '6号トイレ',       x: 16, y: 31, type: 'real',    nearR: 7  },
+  { id: 'toilet-6',    name: '6号トイレ',       x: 34, y: 42, type: 'real',    nearR: 8,  focusR: 5   },
 ];
 
 // 暗い fog に合わせて base を最小限に (Step 21.7)
@@ -678,13 +679,18 @@ function renderFogCanvas() {
   const h = field.offsetHeight;
   if (w === 0 || h === 0) return;
 
-  // キャンバスサイズを field-world の実ピクセルサイズに合わせる
-  if (canvas.width !== w || canvas.height !== h) {
-    canvas.width  = w;
-    canvas.height = h;
+  const dpr    = window.devicePixelRatio || 1;
+  const pixelW = Math.round(w * dpr);
+  const pixelH = Math.round(h * dpr);
+
+  // CSS座標はfield-worldと一致させ、内部解像度だけDPR分に上げる
+  if (canvas.width !== pixelW || canvas.height !== pixelH) {
+    canvas.width  = pixelW;
+    canvas.height = pixelH;
   }
 
   const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // 1. 暗い霧で全体を塗りつぶす
   ctx.globalCompositeOperation = 'source-over';
@@ -730,28 +736,69 @@ function initSpots() {
 }
 
 // フィールド座標範囲による公園内判定（デモ移動用）
-// SVG 外周 rect（北 x=6..65 y=6..44、南 x=6..65 y=52..93）に対応
+// 背景画像上の公園外周（北園・南園）に合わせた大まかな対象範囲
 function isInsideFieldPark(x, y) {
-  return (x >= 6 && x <= 65 && y >= 6  && y <= 44) ||   // 北園
-         (x >= 6 && x <= 65 && y >= 52 && y <= 93);      // 南園
+  return (x >= 24 && x <= 72 && y >= 3  && y <= 47) ||   // 北園
+         (x >= 18 && x <= 73 && y >= 52 && y <= 98);      // 南園
+}
+
+function getNearestSpot(from = pos) {
+  const targets = PARK_SPOTS.concat({
+    id: 'areapets-footprint',
+    name: 'AREA PETSの足あと',
+    x: EVENT_POS.x,
+    y: EVENT_POS.y,
+    type: 'event',
+    nearR: EVENT_NEAR_RADIUS,
+    focusR: EVENT_CLOSE_RADIUS,
+  });
+  return targets.reduce((nearest, spot) => {
+    const d = dist(from, spot);
+    if (!nearest || d < nearest.distance) return { spot, distance: d };
+    return nearest;
+  }, null);
+}
+
+function fieldPointFromClient(clientX, clientY) {
+  const field = document.getElementById('field-world');
+  if (!field) return null;
+  const rect = field.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return null;
+  return {
+    x: Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100)),
+    y: Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)),
+  };
 }
 
 // MAP ステータスパネルを更新する
 // gpsInPark: GPS ボタン経由のとき boolean を渡す; それ以外は undefined → field 座標で判定
 function updateMapStatus(gpsInPark) {
   const coordEl  = document.getElementById('status-coords');
+  const tapEl    = document.getElementById('status-tap');
   const nearbyEl = document.getElementById('status-nearby');
+  const nearestEl = document.getElementById('status-nearest');
   const parkEl   = document.getElementById('status-park');
   if (!coordEl || !nearbyEl || !parkEl) return;
 
   // 座標
   coordEl.textContent = `MAP  x=${pos.x.toFixed(1)}  y=${pos.y.toFixed(1)}`;
+  if (tapEl) {
+    tapEl.textContent = lastTapPoint
+      ? `TAP  x=${lastTapPoint.x.toFixed(1)}  y=${lastTapPoint.y.toFixed(1)}`
+      : '';
+  }
 
   // 近くのスポット（isNear が true のもの）
   const nearNames = PARK_SPOTS
     .filter(s => spotNodes[s.id]?.isNear)
     .map(s => s.name);
   nearbyEl.textContent = nearNames.length ? '近: ' + nearNames.join(' / ') : '';
+
+  const nearest = getNearestSpot(pos);
+  if (nearestEl && nearest) {
+    nearestEl.textContent =
+      `最寄: ${nearest.spot.name}  d=${nearest.distance.toFixed(1)}`;
+  }
 
   // 公園内判定
   const inside = gpsInPark !== undefined ? gpsInPark : isInsideFieldPark(pos.x, pos.y);
@@ -765,6 +812,7 @@ function checkSpotProximity() {
     const data = spotNodes[spot.id];
     if (!data) return;
     const d = dist(pos, spot);
+    const focusR = spot.focusR ?? Math.max(5, spot.nearR - 3);
 
     if (d < spot.nearR) {
       if (!data.isNear) {
@@ -772,9 +820,10 @@ function checkSpotProximity() {
         data.el.style.opacity = '0.85';
         data.el.classList.add('near');
       }
+      data.el.classList.toggle('focus', d < focusR);
     } else if (data.isNear) {
       data.isNear = false;
-      data.el.classList.remove('near');
+      data.el.classList.remove('near', 'focus');
       data.el.style.opacity = calcSpotOpacity(spot.type, cells);
     }
   });
@@ -977,6 +1026,25 @@ function bindDpad() {
   });
 }
 
+function bindMapTapDebug() {
+  const mapArea = document.getElementById('map-area');
+  if (!mapArea) return;
+
+  const uiSelectors = '.map-overlay.top-ui, .dpad, .map-status, .discovery-toast, .event-card';
+  document.querySelectorAll(uiSelectors).forEach(el => {
+    el.addEventListener('click', e => e.stopPropagation());
+    el.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
+  });
+
+  mapArea.addEventListener('click', e => {
+    if (e.target.closest(uiSelectors)) return;
+    const point = fieldPointFromClient(e.clientX, e.clientY);
+    if (!point) return;
+    lastTapPoint = point;
+    updateMapStatus();
+  });
+}
+
 // ===========================
 // 初期化
 // ===========================
@@ -1034,6 +1102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 5. D-pad バインド
   bindDpad();
+  bindMapTapDebug();
 
   // 6. GPS確認ボタン
   document.getElementById('gps-btn')?.addEventListener('click', () => {
