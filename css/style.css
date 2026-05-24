@@ -69,7 +69,7 @@ html, body {
 .title {
   font-size: 17px;
   font-weight: 800;
-  letter-spacing: -0.4px;
+  letter-spacing: 0;
   color: var(--text);
 }
 
@@ -166,7 +166,7 @@ html, body {
   font-weight: 800;
   line-height: 1;
   color: var(--text);
-  letter-spacing: -1px;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
@@ -221,7 +221,7 @@ html, body {
   font-weight: 800;
   line-height: 1;
   color: var(--text);
-  letter-spacing: -0.5px;
+  letter-spacing: 0;
   font-variant-numeric: tabular-nums;
 }
 
@@ -302,6 +302,13 @@ html, body {
   gap: 10px;
 }
 
+.companion-card.pets-aware {
+  border-color: rgba(224, 178, 84, 0.34);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.18),
+    inset 0 0 18px rgba(255, 226, 160, 0.10);
+}
+
 .companion-icon {
   flex-shrink: 0;
   width: 32px;
@@ -320,6 +327,13 @@ html, body {
   background: rgba(255, 255, 255, 0.88);
   border-radius: 50% 50% 35% 35% / 55% 55% 42% 42%;
   box-shadow: 0 0 5px rgba(77, 184, 175, 0.30), 0 1px 2px rgba(0,0,0,0.08);
+}
+
+.companion-card.pets-aware .companion-ghost {
+  box-shadow:
+    0 0 5px rgba(77, 184, 175, 0.28),
+    0 0 9px rgba(220, 174, 82, 0.18),
+    0 1px 2px rgba(0,0,0,0.08);
 }
 
 .companion-body {
@@ -348,29 +362,49 @@ html, body {
 .companion-pets-memory {
   display: none;
   align-items: center;
-  gap: 5px;
-  font-size: 9px;
-  font-weight: 600;
-  color: rgba(185, 145, 55, 0.75);
+  align-self: flex-start;
+  gap: 6px;
+  width: fit-content;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(128, 93, 28, 0.86);
+  background: rgba(255, 239, 191, 0.50);
+  border: 1px solid rgba(224, 178, 84, 0.26);
+  border-radius: 999px;
+  padding: 3px 8px 3px 7px;
   letter-spacing: 0.3px;
   line-height: 1.2;
 }
 .companion-pets-memory.active {
-  display: flex;
+  display: inline-flex;
+}
+.companion-pets-memory.just-found {
+  animation: companion-memory-pulse 1.9s ease-in-out 0s 2;
 }
 .companion-pets-memory::before {
   content: '';
   display: block;
   flex-shrink: 0;
-  width: 5px;
-  height: 7px;
+  width: 6px;
+  height: 8px;
   border-radius: 50%;
-  background: rgba(185, 145, 55, 0.60);
+  background: rgba(164, 121, 38, 0.64);
   box-shadow:
-    -3px -4px 0 1.5px rgba(185, 145, 55, 0.45),
-     0px -5px 0 1.5px rgba(185, 145, 55, 0.45),
-     3px -4px 0 1.5px rgba(185, 145, 55, 0.45);
+    -3px -4px 0 1.4px rgba(164, 121, 38, 0.46),
+     0px -5px 0 1.4px rgba(164, 121, 38, 0.46),
+     3px -4px 0 1.4px rgba(164, 121, 38, 0.46);
   margin-top: 4px;
+}
+
+@keyframes companion-memory-pulse {
+  0%, 100% {
+    background: rgba(255, 239, 191, 0.50);
+    box-shadow: none;
+  }
+  45% {
+    background: rgba(255, 235, 172, 0.78);
+    box-shadow: 0 0 12px rgba(224, 178, 84, 0.20);
+  }
 }
 
 /* ===========================
@@ -922,6 +956,27 @@ html, body {
   animation: record-in 0.45s ease-out both;
 }
 
+.record-card-areapets {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 24px 18px, rgba(255, 224, 145, 0.12), transparent 44px),
+    linear-gradient(135deg, rgba(12, 18, 32, 0.94), rgba(25, 28, 42, 0.90));
+  border: 1px solid rgba(255, 224, 145, 0.34);
+  box-shadow:
+    0 8px 24px rgba(12, 18, 32, 0.16),
+    inset 0 0 22px rgba(255, 224, 145, 0.07);
+}
+
+.record-card-areapets::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
 /* 水の記憶のアイコンドット（モチーフの色と揃える） */
 .record-icon-dot {
   width: 38px;
@@ -946,6 +1001,40 @@ html, body {
   border: 1.5px solid rgba(180, 230, 150, 0.32);
 }
 
+.record-footprint-icon {
+  position: relative;
+  width: 38px;
+  height: 46px;
+  flex-shrink: 0;
+}
+
+.record-foot-step {
+  position: absolute;
+  width: 7px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.70);
+  box-shadow: 0 0 6px rgba(255, 215, 120, 0.24);
+}
+
+.record-foot-step::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 2px;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.62);
+  box-shadow:
+    -4px 2px 0 0 rgba(255, 235, 175, 0.58),
+     4px 2px 0 0 rgba(255, 235, 175, 0.58);
+}
+
+.record-foot-step.s1 { left: 4px;  top: 30px; transform: rotate(-12deg); }
+.record-foot-step.s2 { left: 22px; top: 16px; transform: rotate(12deg);  }
+.record-foot-step.s3 { left: 7px;  top: 2px;  transform: rotate(-10deg); }
+
 .record-body {
   flex: 1;
   min-width: 0;
@@ -957,10 +1046,27 @@ html, body {
   color: var(--text);
 }
 
+.record-card-areapets .record-name {
+  color: rgba(255, 246, 218, 0.95);
+}
+
 .record-meta {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
+}
+
+.record-card-areapets .record-meta {
+  color: rgba(255, 255, 255, 0.68);
+  line-height: 1.55;
+}
+
+.record-place {
+  margin-top: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 226, 156, 0.72);
+  line-height: 1.4;
 }
 
 .record-pts {
@@ -968,6 +1074,10 @@ html, body {
   font-weight: 600;
   color: var(--teal-dark);
   flex-shrink: 0;
+}
+
+.record-card-areapets .record-pts {
+  color: rgba(255, 226, 156, 0.86);
 }
 
 @keyframes record-in {
@@ -1084,7 +1194,7 @@ html, body {
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 1.4s ease;
+  transition: opacity 1.2s ease;
 }
 
 .base-card.pets-active .pets-layer {
@@ -1094,21 +1204,21 @@ html, body {
 /* ── 温かい金色のグロー（ティール light とは別に配置） ── */
 .pets-glow {
   position: absolute;
-  top: 8px;
-  left: 10px;
-  width: 30px;
-  height: 30px;
+  top: 10px;
+  left: 13px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: radial-gradient(circle,
-    rgba(255, 218, 130, 0.42) 0%,
+    rgba(255, 218, 130, 0.30) 0%,
     transparent               75%
   );
-  animation: pets-glow-pulse 3.4s ease-in-out infinite;
+  animation: pets-glow-pulse 4.2s ease-in-out infinite;
 }
 
 @keyframes pets-glow-pulse {
-  0%, 100% { opacity: 0.55; transform: scale(1.00); }
-  50%       { opacity: 0.90; transform: scale(1.18); }
+  0%, 100% { opacity: 0.40; transform: scale(1.00); }
+  50%       { opacity: 0.66; transform: scale(1.10); }
 }
 
 /* ── 浮遊粒子（気配） ── */
@@ -1117,8 +1227,8 @@ html, body {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: rgba(255, 235, 170, 0.80);
-  box-shadow: 0 0 3px rgba(255, 220, 140, 0.60);
+  background: rgba(255, 235, 170, 0.56);
+  box-shadow: 0 0 3px rgba(255, 220, 140, 0.34);
 }
 
 .pets-dot.d1 {
@@ -1134,16 +1244,30 @@ html, body {
 }
 
 @keyframes pets-float {
-  0%, 100% { transform: translateY(0)   scale(1.00); opacity: 0.80; }
-  50%       { transform: translateY(-5px) scale(1.25); opacity: 1.00; }
+  0%, 100% { transform: translateY(0)   scale(1.00); opacity: 0.50; }
+  50%       { transform: translateY(-3px) scale(1.12); opacity: 0.78; }
 }
 
 /* ── 床面の小さな足あと痕 ── */
 .pets-mark {
   position: absolute;
   border-radius: 50%;
-  background: rgba(255, 235, 170, 0.28);
-  box-shadow: 0 0 3px rgba(255, 215, 120, 0.18);
+  background: rgba(255, 235, 170, 0.22);
+  box-shadow: 0 0 3px rgba(255, 215, 120, 0.12);
+}
+
+.pets-mark::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 2px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: rgba(255, 235, 170, 0.20);
+  box-shadow:
+    -3px 2px 0 0 rgba(255, 235, 170, 0.18),
+     3px 2px 0 0 rgba(255, 235, 170, 0.18);
 }
 
 /* 2歩ぶん：floor の上に少しずれて配置 */
@@ -1167,7 +1291,8 @@ html, body {
 .base-pets-note {
   display: none;
   font-size: 10px;
-  color: rgba(255, 220, 130, 0.68);
+  font-weight: 600;
+  color: rgba(145, 104, 28, 0.76);
   letter-spacing: 0.2px;
   margin-top: 1px;
 }
@@ -1402,7 +1527,7 @@ html, body {
   font-weight: 800;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.90);
-  letter-spacing: -0.3px;
+  letter-spacing: 0;
   white-space: nowrap;
 }
 
@@ -1453,13 +1578,18 @@ html, body {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(14, 20, 34, 0.74);
+  background:
+    radial-gradient(circle at 28px 18px, rgba(255, 226, 154, 0.10), transparent 52px),
+    rgba(14, 20, 34, 0.76);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 235, 175, 0.14);
+  border: 1px solid rgba(255, 235, 175, 0.22);
   border-radius: 14px;
   padding: 14px 16px;
   margin-top: 8px;
+  box-shadow:
+    0 8px 22px rgba(10, 14, 26, 0.10),
+    inset 0 0 18px rgba(255, 226, 154, 0.05);
   animation: footprint-card-in 0.55s ease-out both;
 }
 
@@ -1482,8 +1612,8 @@ html, body {
   width: 7px;
   height: 9px;
   border-radius: 50%;
-  background: rgba(255, 235, 175, 0.55);
-  box-shadow: 0 0 4px 1px rgba(255, 215, 120, 0.20);
+  background: rgba(255, 235, 175, 0.46);
+  box-shadow: 0 0 4px 1px rgba(255, 215, 120, 0.14);
 }
 
 .fp-step::before {
@@ -1492,12 +1622,12 @@ html, body {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: rgba(255, 235, 175, 0.50);
+  background: rgba(255, 235, 175, 0.42);
   top: -5px;
   left: 2px;
   box-shadow:
-    -4px 2px 0 0 rgba(255, 235, 175, 0.50),
-     4px 2px 0 0 rgba(255, 235, 175, 0.50);
+    -4px 2px 0 0 rgba(255, 235, 175, 0.38),
+     4px 2px 0 0 rgba(255, 235, 175, 0.38);
 }
 
 /* 左下 → 右中 → 左上（交互歩行） */
@@ -1514,7 +1644,7 @@ html, body {
 .footprint-card-title {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 235, 175, 0.82);
+  color: rgba(255, 237, 188, 0.88);
   margin: 0 0 4px;
   letter-spacing: 0.3px;
 }
@@ -1522,7 +1652,7 @@ html, body {
 .footprint-card-desc {
   font-size: 11px;
   line-height: 1.60;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.66);
   margin: 0;
 }
 
@@ -1703,4 +1833,201 @@ html, body {
     transparent               100%
   );
   transition: opacity 0.8s ease, width 0.8s ease, height 0.8s ease;
+}
+
+/* ===========================
+   Step 30: 低いスマホ画面向けの圧縮表示
+   =========================== */
+@media (max-height: 700px), (max-width: 380px) {
+  .main {
+    padding: 4px 6px;
+  }
+
+  .screen {
+    gap: 6px;
+  }
+
+  .map-area {
+    border-radius: 18px;
+  }
+
+  .map-overlay.top-ui {
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    gap: 5px;
+  }
+
+  .map-header-row {
+    gap: 4px;
+  }
+
+  .map-title {
+    font-size: 12px;
+  }
+
+  .map-header-row .brand-badge {
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 1px 5px;
+  }
+
+  .map-header-row .map-badge {
+    max-width: 128px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 9px;
+    padding: 3px 7px;
+  }
+
+  .map-header-row .dev-reset {
+    font-size: 13px;
+    padding: 2px 7px;
+  }
+
+  .point-card {
+    padding: 7px 10px;
+    border-radius: 14px;
+  }
+
+  .point-info {
+    gap: 1px;
+  }
+
+  .point-label,
+  .step-label {
+    font-size: 10px;
+  }
+
+  .point-value {
+    font-size: 26px;
+  }
+
+  .point-unit {
+    font-size: 11px;
+  }
+
+  .point-gain {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+
+  .card-divider {
+    height: 28px;
+    margin: 0 9px;
+  }
+
+  .step-value {
+    font-size: 19px;
+  }
+
+  .step-unit {
+    font-size: 10px;
+  }
+
+  .step-gain {
+    min-height: 12px;
+    font-size: 9px;
+  }
+
+  .gps-row {
+    gap: 6px;
+  }
+
+  .gps-btn {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+
+  .gps-status {
+    max-height: 36px;
+    overflow: hidden;
+    font-size: 9px;
+    line-height: 1.35;
+  }
+
+  .companion-card {
+    gap: 8px;
+    padding: 6px 9px;
+    border-radius: 12px;
+  }
+
+  .companion-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .companion-ghost {
+    width: 12px;
+    height: 15px;
+  }
+
+  .companion-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+  }
+
+  .companion-pets-memory {
+    font-size: 9px;
+    padding: 2px 7px 2px 6px;
+  }
+
+  .companion-react {
+    min-height: 13px;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .map-status {
+    bottom: 10px;
+    left: 10px;
+    gap: 2px;
+  }
+
+  .map-status-row {
+    font-size: 8px;
+    padding: 2px 6px;
+  }
+
+  .dpad {
+    bottom: 10px;
+    right: 10px;
+    grid-template-columns: repeat(3, 31px);
+    grid-template-rows: repeat(3, 31px);
+  }
+
+  .dpad-btn {
+    width: 31px;
+    height: 31px;
+    border-radius: 8px;
+  }
+
+  .event-card {
+    top: 53%;
+    width: min(218px, calc(100% - 36px));
+    padding: 12px 14px 11px;
+  }
+
+  .discovery-toast {
+    left: 24px;
+    right: 24px;
+    padding: 12px 14px 11px;
+  }
+
+  .bottom-nav {
+    padding-top: 4px;
+    padding-bottom: calc(4px + env(safe-area-inset-bottom));
+  }
+
+  .nav-btn {
+    gap: 2px;
+    padding: 6px 5px;
+  }
+
+  .nav-icon {
+    width: 20px;
+    height: 20px;
+  }
 }

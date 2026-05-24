@@ -136,12 +136,12 @@ function randomNextReact() {
   return 4 + Math.floor(Math.random() * 5);  // 4〜8歩ごと
 }
 
-function showCompanionReact(msg) {
+function showCompanionReact(msg, duration = 2200) {
   const el = document.getElementById('companion-react');
   if (!el) return;
   el.textContent = msg;
   clearTimeout(reactTimer);
-  reactTimer = setTimeout(() => { el.textContent = ''; }, 2200);
+  reactTimer = setTimeout(() => { el.textContent = ''; }, duration);
 }
 
 function tickCompanion() {
@@ -311,6 +311,8 @@ const MOTIF2_TOUCH_RADIUS = 6.5;
 const EVENT_POS          = { x: 48, y: 60 };  // 公園南側エリア
 const EVENT_NEAR_RADIUS  = 22;
 const EVENT_CLOSE_RADIUS = 10;
+const AREA_PETS_PLACE    = '南園の気配';
+const AREA_PETS_META     = '見えない小さな気配が、地図に足あとを残した';
 
 let motifEl        = null;
 let motifState     = 'hidden';  // 'hidden' | 'near' | 'found'
@@ -323,10 +325,10 @@ let kirokuRecords  = [];        // 保存・復元に使う記録の配列
 
 // AREA PETS 発見時の KAKUBAKE リアクション (Step 22.6)
 const AREAPETS_DISCOVER_REACTS = [
-  'いま、なにか通ったね',
-  '足あと、のこってる',
-  'まだ近くにいるかも',
-  'そっと見つけたね',
+  'さっきの足あと、ちゃんと覚えてる',
+  'また近くにいるかも',
+  'ここを通った気配、覚えておくね',
+  '一緒に見つけた足あとだね',
 ];
 
 function initMotif() {
@@ -487,7 +489,8 @@ function discoverAreaPets() {
     name:     'AREA PETSの足あと',
     pts:      50,
     dotClass: 'areapets',
-    meta:     '見えない小さな気配が、地図に足あとを残した',
+    meta:     AREA_PETS_META,
+    place:    AREA_PETS_PLACE,
   });
 
   // 発見カードを表示（説明 + KAKUBAKE の一言）
@@ -495,12 +498,13 @@ function discoverAreaPets() {
     Math.floor(Math.random() * AREAPETS_DISCOVER_REACTS.length)
   ];
   showEventCard(react);
+  showCompanionReact(react, 5600);
 
   // 地図上に足あとマークを配置
   placeFootprint(true);
 
   // 拠点画面の足あとカードを表示
-  updateKyotenFootprint();
+  updateKyotenFootprint(true);
 
   // 即座に発見状態を保存（ページリロードで再発生しない）
   try { localStorage.setItem(STORAGE_EVENT, 'found'); } catch(e) {}
@@ -508,18 +512,26 @@ function discoverAreaPets() {
 }
 
 // 拠点画面の足あとカード＋base-card への気配レイヤーを表示／非表示 (Step 24/25)
-function updateKyotenFootprint() {
+function updateKyotenFootprint(fresh = false) {
   const footprintCard = document.getElementById('kyoten-footprint');
   const baseCard      = document.getElementById('kyoten-base');
   const memBadge      = document.getElementById('companion-pets-memory');
+  const companionCard = document.querySelector('.companion-card');
   if (eventFound) {
     footprintCard?.classList.add('active');
     baseCard?.classList.add('pets-active');
+    companionCard?.classList.add('pets-aware');
     memBadge?.classList.add('active');
+    if (fresh && memBadge) {
+      memBadge.classList.add('just-found');
+      setTimeout(() => memBadge.classList.remove('just-found'), 5600);
+    }
   } else {
     footprintCard?.classList.remove('active');
     baseCard?.classList.remove('pets-active');
+    companionCard?.classList.remove('pets-aware');
     memBadge?.classList.remove('active');
+    memBadge?.classList.remove('just-found');
   }
 }
 
@@ -784,6 +796,16 @@ function showToast(title, pts) {
 // ===========================
 // 記録画面への追加
 // ===========================
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
 function addKirokuRecord(item) {
   const empty = document.getElementById('kiroku-empty');
   const list  = document.getElementById('kiroku-list');
@@ -791,17 +813,33 @@ function addKirokuRecord(item) {
 
   if (empty) empty.style.display = 'none';
 
+  const isAreaPets = item.dotClass === 'areapets';
+  const normalized = isAreaPets
+    ? { ...item, meta: item.meta || AREA_PETS_META, place: item.place || AREA_PETS_PLACE }
+    : item;
+  const iconHTML = isAreaPets
+    ? '<div class="record-footprint-icon" aria-hidden="true">' +
+        '<span class="record-foot-step s1"></span>' +
+        '<span class="record-foot-step s2"></span>' +
+        '<span class="record-foot-step s3"></span>' +
+      '</div>'
+    : '<div class="record-icon-dot' + (normalized.dotClass ? ' ' + escapeHTML(normalized.dotClass) : '') + '"></div>';
+  const placeHTML = normalized.place
+    ? '<p class="record-place">発見した場所：' + escapeHTML(normalized.place) + '</p>'
+    : '';
+
   const card = document.createElement('div');
-  card.className = 'record-card';
+  card.className = 'record-card' + (isAreaPets ? ' record-card-areapets' : '');
   card.innerHTML =
-    '<div class="record-icon-dot' + (item.dotClass ? ' ' + item.dotClass : '') + '"></div>' +
+    iconHTML +
     '<div class="record-body">' +
-      '<p class="record-name">' + item.name + '</p>' +
-      '<p class="record-meta">' + (item.meta || '記憶のかけら') + '</p>' +
+      '<p class="record-name">' + escapeHTML(normalized.name) + '</p>' +
+      '<p class="record-meta">' + escapeHTML(normalized.meta || '記憶のかけら') + '</p>' +
+      placeHTML +
     '</div>' +
-    '<span class="record-pts">+' + item.pts + ' pt</span>';
+    '<span class="record-pts">+' + escapeHTML(normalized.pts) + ' pt</span>';
   list.appendChild(card);
-  kirokuRecords.push(item);
+  kirokuRecords.push(normalized);
 }
 
 // ===========================
