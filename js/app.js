@@ -507,14 +507,19 @@ function discoverAreaPets() {
   saveState();
 }
 
-// 拠点画面の足あとカードを表示／非表示 (Step 24)
+// 拠点画面の足あとカード＋base-card への気配レイヤーを表示／非表示 (Step 24/25)
 function updateKyotenFootprint() {
-  const el = document.getElementById('kyoten-footprint');
-  if (!el) return;
+  const footprintCard = document.getElementById('kyoten-footprint');
+  const baseCard      = document.getElementById('kyoten-base');
+  const memBadge      = document.getElementById('companion-pets-memory');
   if (eventFound) {
-    el.classList.add('active');
+    footprintCard?.classList.add('active');
+    baseCard?.classList.add('pets-active');
+    memBadge?.classList.add('active');
   } else {
-    el.classList.remove('active');
+    footprintCard?.classList.remove('active');
+    baseCard?.classList.remove('pets-active');
+    memBadge?.classList.remove('active');
   }
 }
 
