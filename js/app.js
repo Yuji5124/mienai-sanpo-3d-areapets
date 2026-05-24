@@ -499,9 +499,23 @@ function discoverAreaPets() {
   // 地図上に足あとマークを配置
   placeFootprint(true);
 
+  // 拠点画面の足あとカードを表示
+  updateKyotenFootprint();
+
   // 即座に発見状態を保存（ページリロードで再発生しない）
   try { localStorage.setItem(STORAGE_EVENT, 'found'); } catch(e) {}
   saveState();
+}
+
+// 拠点画面の足あとカードを表示／非表示 (Step 24)
+function updateKyotenFootprint() {
+  const el = document.getElementById('kyoten-footprint');
+  if (!el) return;
+  if (eventFound) {
+    el.classList.add('active');
+  } else {
+    el.classList.remove('active');
+  }
 }
 
 // AREA PETS 発見カード（説明 + KAKUBAKE の一言を一枚のカードで表示）
@@ -971,7 +985,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (motif2State === 'found' && motif2El) motif2El.classList.add('found');
   if (eventFound  && eventSpotEl) {
     eventSpotEl.classList.add('found');
-    placeFootprint(false);  // リロード後はアニメなしで復元
+    placeFootprint(false);      // リロード後はアニメなしで復元
+    updateKyotenFootprint();    // 拠点画面の足あとカードも復元
   }
 
   // 5. D-pad バインド

@@ -1304,6 +1304,91 @@ html, body {
 }
 
 /* ===========================
+   Step 24: 拠点画面 ─ AREA PETS 足あとカード
+   eventFound = true のとき .active クラスで表示
+   =========================== */
+.footprint-card {
+  display: none;  /* JS が .active を付けるまで非表示 */
+}
+
+.footprint-card.active {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(14, 20, 34, 0.74);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 235, 175, 0.14);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 8px;
+  animation: footprint-card-in 0.55s ease-out both;
+}
+
+@keyframes footprint-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─ 足あとマーク群（3歩・斜め配置） ─ */
+.footprint-card-marks {
+  position: relative;
+  width: 30px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+/* 1歩ぶん：メイン肉球 + 指先（::before + box-shadow） */
+.fp-step {
+  position: absolute;
+  width: 7px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.55);
+  box-shadow: 0 0 4px 1px rgba(255, 215, 120, 0.20);
+}
+
+.fp-step::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 235, 175, 0.50);
+  top: -5px;
+  left: 2px;
+  box-shadow:
+    -4px 2px 0 0 rgba(255, 235, 175, 0.50),
+     4px 2px 0 0 rgba(255, 235, 175, 0.50);
+}
+
+/* 左下 → 右中 → 左上（交互歩行） */
+.fp-step:nth-child(1) { left: 0px;  top: 33px; }
+.fp-step:nth-child(2) { left: 16px; top: 17px; }
+.fp-step:nth-child(3) { left: 2px;  top: 2px;  }
+
+/* ─ テキスト部分 ─ */
+.footprint-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.footprint-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 235, 175, 0.82);
+  margin: 0 0 4px;
+  letter-spacing: 0.3px;
+}
+
+.footprint-card-desc {
+  font-size: 11px;
+  line-height: 1.60;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+/* ===========================
    AREA PETS 発見カード (Step 22.6)
    発見時に map-area 中央に浮かび、数秒で消える半透明カード
    =========================== */
