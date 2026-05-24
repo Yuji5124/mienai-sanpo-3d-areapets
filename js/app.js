@@ -6,14 +6,13 @@
 // ===========================
 // localStorage キー
 // ===========================
-const STORAGE_POINTS   = 'areapets_points';
-const STORAGE_MOTIF    = 'areapets_motif';
-const STORAGE_MOTIF2   = 'areapets_motif2';
-const STORAGE_RECORDS  = 'areapets_records';
-const STORAGE_CELLS    = 'areapets_cells';
-const STORAGE_POS      = 'areapets_pos';
-const STORAGE_STEPS    = 'areapets_steps';
-const STORAGE_REVEALED = 'areapets_revealed';  // Step 21.7c: グリッドリビール
+const STORAGE_POINTS  = 'areapets_points';
+const STORAGE_MOTIF   = 'areapets_motif';
+const STORAGE_MOTIF2  = 'areapets_motif2';
+const STORAGE_RECORDS = 'areapets_records';
+const STORAGE_CELLS   = 'areapets_cells';
+const STORAGE_POS     = 'areapets_pos';
+const STORAGE_STEPS   = 'areapets_steps';
 
 // ===========================
 // 木場公園 GPS 基準範囲（仮）
@@ -222,7 +221,6 @@ function movePin(dx, dy) {
   const memResult = stampMemory(pos.x, pos.y);
   addTrail(oldX, oldY);
   renderPin();
-  revealCurrentCell();  // Step 21.7c: 通過セルを記録
   saveCells();
   savePos();
   // 歩数: 移動したら必ず +1、新セル/levelup でさらに +1 (Step 21.7)
@@ -511,53 +509,23 @@ function updateMapBrightness() {
 }
 
 // ===========================
-// Canvas 霧: 穴あけ方式 (Step 21.7b)
+// Canvas 霧: 丸い自然なリビール方式 (Step 21.7d)
+// ランタン光のような柔らかい穴あけ。グリッド方式は廃止。
 // ===========================
-const CANVAS_HOLE_RADII = [55, 66, 76, 85, 95];  // level 1-5 (field-world px) — 後方互換で残す
-const CANVAS_POS_RADIUS = 72;                      // 現在地周囲の穴半径 — 後方互換で残す
+// level 1〜5 の記憶セル穴半径 (field-world px)
+const CANVAS_HOLE_RADII = [58, 70, 82, 95, 110];
+// 現在地周囲の穴半径（常時表示）
+const CANVAS_POS_RADIUS = 88;
 
-// ===========================
-// グリッドベースリビール (Step 21.7c)
-// ===========================
-const GRID_COLS = 14;
-const GRID_ROWS = 14;
-let revealedCells = new Set();  // 通過済みセルの Set。キーは 'col,row' 文字列
-
-// フィールド座標 (0-100) → グリッドセル { col, row, key }
-function posToGridCell(x, y) {
-  const col = Math.max(0, Math.min(GRID_COLS - 1, Math.floor(x / 100 * GRID_COLS)));
-  const row = Math.max(0, Math.min(GRID_ROWS - 1, Math.floor(y / 100 * GRID_ROWS)));
-  return { col, row, key: `${col},${row}` };
-}
-
-// 現在地のグリッドセルを通過済みに追加して保存
-function revealCurrentCell() {
-  const { key } = posToGridCell(pos.x, pos.y);
-  if (!revealedCells.has(key)) {
-    revealedCells.add(key);
-    saveRevealedCells();
-  }
-}
-
-function saveRevealedCells() {
-  try {
-    localStorage.setItem(STORAGE_REVEALED, JSON.stringify([...revealedCells]));
-  } catch(e) {}
-}
-
-function loadRevealedCells() {
-  try {
-    const data = localStorage.getItem(STORAGE_REVEALED);
-    if (data !== null) JSON.parse(data).forEach(k => revealedCells.add(k));
-  } catch(e) {}
-}
-
-function cutFogHole(ctx, cx, cy, r, centerAlpha) {
+// 柔らかいランタン光のような穴を destination-out で開ける
+function cutFogHole(ctx, cx, cy, r) {
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  grad.addColorStop(0,    `rgba(0,0,0,${centerAlpha.toFixed(2)})`);
-  grad.addColorStop(0.42, `rgba(0,0,0,${(centerAlpha * 0.72).toFixed(2)})`);
-  grad.addColorStop(0.74, `rgba(0,0,0,${(centerAlpha * 0.26).toFixed(2)})`);
-  grad.addColorStop(1,    'rgba(0,0,0,0)');
+  grad.addColorStop(0.00, 'rgba(0,0,0,1.00)');  // 中心: 完全に切り抜く
+  grad.addColorStop(0.30, 'rgba(0,0,0,0.90)');  // まだ強く切り抜く
+  grad.addColorStop(0.55, 'rgba(0,0,0,0.58)');  // ソフトに移行
+  grad.addColorStop(0.75, 'rgba(0,0,0,0.22)');  // にじみ始め
+  grad.addColorStop(0.90, 'rgba(0,0,0,0.05)');  // ほぼ霧
+  grad.addColorStop(1.00, 'rgba(0,0,0,0.00)');  // 霧に溶ける
   ctx.fillStyle = grad;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
@@ -580,44 +548,27 @@ function renderFogCanvas() {
     canvas.height = h;
   }
 
-  const ctx   = canvas.getContext('2d');
-  const cellW = w / GRID_COLS;
-  const cellH = h / GRID_ROWS;
-  const margin = 2;  // グリッド線として残す余白（px）
+  const ctx = canvas.getContext('2d');
 
-  // 1. 黒い霧で全体を塗りつぶす
+  // 1. 暗い霧で全体を塗りつぶす
   ctx.globalCompositeOperation = 'source-over';
   ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'rgba(8, 12, 20, 0.97)';
+  ctx.fillStyle = 'rgba(6, 10, 18, 0.96)';
   ctx.fillRect(0, 0, w, h);
 
-  // 2. 通過済みグリッドセルを透明にして背景画像を露出
+  // 2. 記憶セルの位置に柔らかい穴を開けて背景画像を露出
   ctx.globalCompositeOperation = 'destination-out';
-  ctx.fillStyle = 'rgba(0, 0, 0, 1)';
-  revealedCells.forEach(key => {
-    const [col, row] = key.split(',').map(Number);
-    ctx.fillRect(
-      col * cellW + margin,
-      row * cellH + margin,
-      cellW - margin * 2,
-      cellH - margin * 2
-    );
+  memoryCells.forEach(cell => {
+    const cx = (cell.x / 100) * w;
+    const cy = (cell.y / 100) * h;
+    const r  = CANVAS_HOLE_RADII[Math.min(cell.level - 1, 4)];
+    cutFogHole(ctx, cx, cy, r);
   });
 
-  // 3. 現在地セルに暖かい光のグロー（露出した面に淡い温かみを添える）
-  ctx.globalCompositeOperation = 'source-over';
-  const { col: pc, row: pr } = posToGridCell(pos.x, pos.y);
-  const glowCx = (pc + 0.5) * cellW;
-  const glowCy = (pr + 0.5) * cellH;
-  const glowR  = Math.max(cellW, cellH) * 1.5;
-  const grad = ctx.createRadialGradient(glowCx, glowCy, 0, glowCx, glowCy, glowR);
-  grad.addColorStop(0,    'rgba(255, 235, 150, 0.20)');
-  grad.addColorStop(0.50, 'rgba(255, 220, 120, 0.07)');
-  grad.addColorStop(1,    'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(glowCx, glowCy, glowR, 0, Math.PI * 2);
-  ctx.fill();
+  // 3. 現在地周辺にも常に柔らかい穴を開ける（ランタンで照らす感覚）
+  const px = (pos.x / 100) * w;
+  const py = (pos.y / 100) * h;
+  cutFogHole(ctx, px, py, CANVAS_POS_RADIUS);
 }
 
 function initSpots() {
@@ -764,7 +715,6 @@ function loadState() {
     const steps = localStorage.getItem(STORAGE_STEPS);
     if (steps !== null) currentSteps = JSON.parse(steps);
   } catch(e) {}
-  loadRevealedCells();  // Step 21.7c: グリッドリビール復元
 }
 
 // ===========================
@@ -886,7 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. マップ初期化
   renderPin();
-  revealCurrentCell();  // Step 21.7c: 初期位置のセルを開放
   initMotif();
   initMotif2();
   initEventSpot();
@@ -957,7 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (memResult === 'new')     addPoints(2);
           if (memResult === 'levelup') addPoints(1);
           addSteps(20);
-          revealCurrentCell();  // Step 21.7c: GPS位置のセルを開放
           renderFogCanvas();    // GPS 確認後も霧を更新
           memLine = '\n現在地の記憶を刻みました';
         }
@@ -985,12 +933,11 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   });
 
-  // 7. 開発用リセットボタン（Step 21.7c: header内＋map内の両方に対応）
+  // 7. 開発用リセットボタン（map-header-row 内のボタンにも対応）
   document.querySelectorAll('.dev-reset').forEach(btn => {
     btn.addEventListener('click', () => {
       [STORAGE_POINTS, STORAGE_MOTIF, STORAGE_MOTIF2,
-       STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS,
-       STORAGE_REVEALED].forEach(k => {
+       STORAGE_RECORDS, STORAGE_CELLS, STORAGE_POS, STORAGE_STEPS].forEach(k => {
         try { localStorage.removeItem(k); } catch(e) {}
       });
       location.reload();
